@@ -23,13 +23,12 @@ function getBackendBaseUrl() {
   return DEFAULT_REMOTE_BACKEND;
 }
 
-const BACKEND_BASE = getBackendBaseUrl();
-
 function apiUrl(endpoint) {
-  if (!endpoint) return BACKEND_BASE;
+  const base = getBackendBaseUrl();
+  if (!endpoint) return base;
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) return endpoint;
   const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  return `${BACKEND_BASE}${clean}`;
+  return `${base}${clean}`;
 }
 
 function formatMediaUrl(url, fallback = '') {
@@ -37,5 +36,6 @@ function formatMediaUrl(url, fallback = '') {
   const clean = url.trim();
   if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) return clean;
   const cleanPath = clean.startsWith('/') ? clean : `/${clean}`;
-  return `${BACKEND_BASE}${cleanPath}`;
+  const base = getBackendBaseUrl();
+  return `${base}${cleanPath}`;
 }

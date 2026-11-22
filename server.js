@@ -226,26 +226,11 @@ app.put('/api/settings', requireAdminAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
-// REST APIS: 2. AUTHENTICATION (ADMIN & DEMO LOGIN)
+// REST APIS: 2. AUTHENTICATION (DATABASE DRIVEN)
 // ----------------------------------------------------
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password, isDemo } = req.body;
-
-    if (isDemo) {
-      // 1-Click Instant Demo Login
-      const demoToken = jwt.sign(
-        { id: 'admin_demo', email: 'demo@chocolux.com', role: 'admin', name: 'ChocoLux Demo Admin' },
-        JWT_SECRET,
-        { expiresIn: '30d' }
-      );
-      res.cookie(COOKIE_NAME, demoToken, getAuthCookieOptions(req));
-      return res.json({
-        success: true,
-        token: demoToken,
-        user: { id: 'admin_demo', email: 'demo@chocolux.com', role: 'admin', name: 'ChocoLux Demo Admin' }
-      });
-    }
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -253,22 +238,12 @@ app.post('/api/auth/login', async (req, res) => {
 
     const result = await pool.query('SELECT * FROM choco_users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
     if (result.rows.length === 0) {
-      // Fallback for default admin
-      if (email.trim().toLowerCase() === 'admin@chocolux.com' && password === 'admin123') {
-        const token = jwt.sign(
-          { id: 'admin_default', email: 'admin@chocolux.com', role: 'admin', name: 'ChocoLux Admin' },
-          JWT_SECRET,
-          { expiresIn: '30d' }
-        );
-        res.cookie(COOKIE_NAME, token, getAuthCookieOptions(req));
-        return res.json({ success: true, token, user: { email: 'admin@chocolux.com', role: 'admin', name: 'ChocoLux Admin' } });
-      }
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = result.rows[0];
     const valid = verifyPassword(password, user.password_hash);
-    if (!valid && password !== 'admin123') {
+    if (!valid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 

@@ -6,7 +6,7 @@
   <base href="/">
   <script src="js/config.js"></script>
   <link id="admin-favicon" rel="icon" type="image/png" href="/uploads/choco-1795357882540-491298133.png">
-  <title id="admin-doc-title">CookLux — Admin Management Portal</title>
+  <title id="admin-doc-title">SnackzTin — Admin Management Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -61,18 +61,18 @@
         <img id="admin-login-logo-img" src="/uploads/choco-1795357882540-491298133.png" alt="Logo" class="w-full h-full object-contain p-1.5">
         <span id="admin-login-logo-emoji" class="hidden">🍫</span>
       </div>
-      <h2 id="login-brand-name" class="font-serif text-2xl font-bold text-choco-950">CookLux Admin</h2>
-      <p class="text-xs text-choco-600 mt-1 mb-6">Enter your credentials or click 1-Click Demo Login to manage your store catalog.</p>
+      <h2 id="login-brand-name" class="font-serif text-2xl font-bold text-choco-950">SnackzTin Admin</h2>
+      <p class="text-xs text-choco-600 mt-1 mb-6">Enter your registered credentials to manage your store catalog.</p>
 
       <form id="login-form" class="space-y-4 text-left">
         <div>
           <label class="block text-xs font-bold text-choco-700 uppercase mb-1">Email</label>
-          <input type="email" id="login-email" value="admin@chocolux.com" required
+          <input type="email" id="login-email" placeholder="admin@snackztin.com" required
             class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm focus:outline-none focus:border-choco-900">
         </div>
         <div>
           <label class="block text-xs font-bold text-choco-700 uppercase mb-1">Password</label>
-          <input type="password" id="login-password" value="admin123" required
+          <input type="password" id="login-password" placeholder="••••••••" required
             class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm focus:outline-none focus:border-choco-900">
         </div>
         
@@ -81,11 +81,15 @@
         </button>
       </form>
 
-      <div class="mt-6 pt-6 border-t border-choco-100">
-        <button id="demo-login-btn" class="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-choco-950 text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-2">
-          <span>⚡ 1-Click Instant Demo Login</span>
-        </button>
-        <p class="text-[11px] text-choco-400 mt-2">Bypasses password for instant dashboard inspection.</p>
+      <div id="backend-status-card" class="mt-5 pt-4 border-t border-choco-100 text-center">
+        <div class="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-choco-600 mb-1">
+          <span id="backend-status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="backend-status-text">Backend API Connected</span>
+        </div>
+        <div id="backend-status-actions" class="text-[11px] text-choco-500 space-x-2">
+          <button type="button" onclick="promptChangeBackend()" class="text-choco-800 underline hover:text-gold-600">Change Backend URL</button>
+          <button type="button" onclick="useLocalBackend()" class="text-choco-800 underline hover:text-gold-600">Use Local (3001)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -106,7 +110,7 @@
             <span id="admin-drawer-logo-emoji" class="text-xl hidden">🍫</span>
           </div>
           <div>
-            <span id="drawer-brand-title" class="font-serif text-base font-bold text-white block leading-tight">CookLux</span>
+            <span id="drawer-brand-title" class="font-serif text-base font-bold text-white block leading-tight">SnackzTin</span>
             <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-400 border border-gold-400/30">Master Admin</span>
           </div>
         </div>
@@ -173,7 +177,7 @@
           </div>
           <div class="truncate">
             <div class="flex items-center gap-1.5 sm:gap-2">
-              <span id="header-brand-title" class="font-serif text-base sm:text-xl font-bold tracking-tight text-white truncate">CookLux</span>
+              <span id="header-brand-title" class="font-serif text-base sm:text-xl font-bold tracking-tight text-white truncate">SnackzTin</span>
               <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-400 border border-gold-400/30 shrink-0">Admin</span>
             </div>
             <p class="text-[10px] sm:text-[11px] text-choco-300 hidden sm:block truncate">Live PostgreSQL Storefront & WhatsApp Hub</p>
@@ -468,7 +472,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block font-bold text-choco-800 uppercase mb-1">Brand Name *</label>
-                  <input type="text" id="setting-brand-name" required value="CookLux"
+                  <input type="text" id="setting-brand-name" required value="SnackzTin"
                     class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm font-bold text-choco-950 focus:outline-none focus:border-choco-900">
                   <p class="text-[11px] text-choco-500 mt-1">Instantly renames the entire store, navbar, footer, and invoices.</p>
                 </div>
@@ -839,10 +843,42 @@
       });
     }
 
+    function updateBackendStatusUI(online, url) {
+      const dot = document.getElementById('backend-status-dot');
+      const text = document.getElementById('backend-status-text');
+      if (dot && text) {
+        if (online) {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+          text.innerText = 'Connected: ' + (url || 'Active');
+          text.className = 'text-emerald-700 font-semibold';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-pulse';
+          text.innerText = 'Backend unreachable at ' + (url || 'remote');
+          text.className = 'text-rose-600 font-bold';
+        }
+      }
+    }
+
+    function useLocalBackend() {
+      localStorage.setItem('snackztin_backend_url', 'http://localhost:3001');
+      window.location.reload();
+    }
+
+    function promptChangeBackend() {
+      const current = getBackendBaseUrl();
+      const next = prompt('Enter your backend API URL (e.g. https://snackztin-backend.onrender.com or http://localhost:3001):', current);
+      if (next && next.trim()) {
+        localStorage.setItem('snackztin_backend_url', next.trim().replace(/\/$/, ''));
+        window.location.reload();
+      }
+    }
+
     // 1. Auth Handling
     async function checkAuth() {
+      const activeUrl = getBackendBaseUrl() || window.location.origin;
       try {
         const res = await adminFetch('/api/auth/me');
+        updateBackendStatusUI(true, activeUrl);
         if (res.ok) {
           const data = await res.json();
           if (data && data.user) {
@@ -852,13 +888,15 @@
             return;
           }
         }
-      } catch (_) {}
+      } catch (_) {
+        updateBackendStatusUI(false, activeUrl);
+      }
       document.getElementById('login-overlay').classList.remove('hidden');
     }
 
     async function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById('login-email').value;
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
 
       try {
@@ -876,30 +914,12 @@
           document.getElementById('login-overlay').classList.add('hidden');
           initializeDashboard();
         } else {
-          alert(data.error || 'Login failed');
+          alert(data.error || 'Login failed. Please check your credentials.');
         }
       } catch (err) {
-        alert('Could not complete login');
+        alert('Could not connect to backend at ' + (getBackendBaseUrl() || window.location.origin) + '. Please check if server is running.');
+        updateBackendStatusUI(false, getBackendBaseUrl());
       }
-    }
-
-    async function handleDemoLogin() {
-      try {
-        const res = await adminFetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isDemo: true })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          if (data.token) {
-            localStorage.setItem('chocolux_admin_token', data.token);
-          }
-          currentAdminUser = data.user;
-          document.getElementById('login-overlay').classList.add('hidden');
-          initializeDashboard();
-        }
-      } catch (_) {}
     }
 
     async function handleLogout() {
@@ -926,7 +946,7 @@
         const res = await adminFetch('/api/settings');
         if (res.ok) {
           const s = await res.json();
-          const brandName = s.brandName || s.brand_name || 'CookLux';
+          const brandName = s.brandName || s.brand_name || 'SnackzTin';
           
           document.getElementById('header-brand-title').innerText = brandName;
           const drawerBrand = document.getElementById('drawer-brand-title');
@@ -1855,7 +1875,6 @@
 
     function bindForms() {
       document.getElementById('login-form').addEventListener('submit', handleLogin);
-      document.getElementById('demo-login-btn').addEventListener('click', handleDemoLogin);
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
       document.getElementById('store-settings-form').addEventListener('submit', handleSaveSettings);
       document.getElementById('product-form').addEventListener('submit', handleProductFormSubmit);

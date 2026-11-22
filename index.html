@@ -6,7 +6,7 @@
   <base href="/">
   <script src="js/config.js"></script>
   <link id="site-favicon" rel="icon" type="image/png" href="/uploads/choco-1795357882540-491298133.png">
-  <title id="page-title">CookLux</title>
+  <title id="page-title">SnackzTin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -79,7 +79,7 @@
             <span id="nav-brand-logo-emoji" class="text-2xl font-serif">🍫</span>
           </div>
           <div>
-            <span id="nav-brand-name" class="font-serif text-2xl font-bold tracking-tight text-choco-950">CookLux</span>
+            <span id="nav-brand-name" class="font-serif text-2xl font-bold tracking-tight text-choco-950">SnackzTin</span>
           </div>
         </a>
 
@@ -564,7 +564,7 @@
               <img id="footer-brand-logo-img" src="/uploads/choco-1795357882540-491298133.png" alt="Logo" class="w-full h-full object-contain p-1">
               <span id="footer-brand-logo-emoji" class="text-2xl hidden">🍫</span>
             </div>
-            <span id="footer-brand-name" class="font-serif text-2xl font-bold text-white tracking-tight">CookLux</span>
+            <span id="footer-brand-name" class="font-serif text-2xl font-bold text-white tracking-tight">SnackzTin</span>
           </div>
           <p id="footer-tagline" class="text-choco-400 max-w-sm leading-relaxed">
             Chocolates, Gourmet Mixtures & Artisan Confections. Prepared fresh using 100% pure cocoa butter and slow-roasted nuts.
@@ -597,176 +597,19 @@
 
   <!-- SCRIPT LOGIC -->
   <script>
-    // State
+    // State - Dynamic data loaded strictly from PostgreSQL database
     let storeSettings = {
-      brandName: 'CookLux',
+      brandName: 'SnackzTin',
       tagline: '',
-      logoUrl: '/uploads/choco-1795357882540-491298133.png',
+      logoUrl: '',
       whatsappNumber: '918078864233',
-      announcementText: '🍫 Free Insulated Cold-Box Delivery on orders above ₹799 | 100% Pure Cocoa Butter',
+      announcementText: '',
       minFreeShipping: 799,
       deliveryCharge: 60
     };
 
-    const DEFAULT_CATEGORIES = [
-      { id: 'cat_mix', name: 'Chocolate Mixtures & Crunch', icon: '🥜' },
-      { id: 'cat_dark', name: 'Dark Chocolates', icon: '🍫' },
-      { id: 'cat_milk', name: 'Milk & Creamy Chocolates', icon: '🥛' },
-      { id: 'cat_truffles', name: 'Handcrafted Truffles & Bonbons', icon: '✨' },
-      { id: 'cat_nutty', name: 'Nutty Barks & Clusters', icon: '🌰' },
-      { id: 'cat_hampers', name: 'Luxury Gift Boxes & Hampers', icon: '🎁' },
-      { id: 'cat_healthy', name: 'Sugar-Free & Keto Treats', icon: '🌿' }
-    ];
-
-    const DEFAULT_PRODUCTS = [
-      {
-        id: 'choco_prod_mix_01',
-        title: 'Royal Roasted Dry-Fruit & Dark Chocolate Trail Mixture',
-        category: 'Chocolate Mixtures & Crunch',
-        sub_category: 'Nutty Trail Mix',
-        cocoa_percentage: '65% Rich Cocoa Droplets',
-        mrp: 599,
-        price: 499,
-        rating: 4.8,
-        review_count: 64,
-        featured: true,
-        best_seller: false,
-        variants: { '250g Jar': 1, '500g Pack': 0 },
-        images: ['https://images.unsplash.com/photo-1511381939415-e44015466834?w=800&q=80', 'https://images.unsplash.com/photo-1575372587186-500b3d1ee98a?w=800&q=80'],
-        description: 'An irresistible gourmet mixture combining whole slow-roasted nuts, plump dried berries, crunchy roasted seeds, and bite-sized Belgian dark chocolate drops.'
-      },
-      {
-        id: 'choco_prod_mix_02',
-        title: 'Salted Caramel Pretzel & Milk Chocolate Crunch Mix',
-        category: 'Chocolate Mixtures & Crunch',
-        sub_category: 'Pretzel Crunch',
-        cocoa_percentage: '45% Alpine Milk Chocolate',
-        mrp: 540,
-        price: 400,
-        rating: 4.8,
-        review_count: 48,
-        featured: true,
-        best_seller: true,
-        variants: { '200g Pouch': 1, '400g Tin': 0 },
-        images: ['https://images.unsplash.com/photo-1548907040-4baa42d10919?w=800&q=80', 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=800&q=80'],
-        description: 'The golden balance of sweet and savory! Crispy salted pretzels tossed with butter toffee nuggets and smothered in smooth alpine milk chocolate.'
-      },
-      {
-        id: 'choco_prod_mix_03',
-        title: 'Chocolate Coated Golden Almonds & Berry Medley Mixture',
-        category: 'Chocolate Mixtures & Crunch',
-        sub_category: 'Berry Medley',
-        cocoa_percentage: 'Dark & White Cocoa Duo',
-        mrp: 650,
-        price: 540,
-        rating: 4.8,
-        review_count: 37,
-        featured: false,
-        best_seller: false,
-        variants: { '250g Jar': 1, '500g Jar': 0 },
-        images: ['https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&q=80', 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=800&q=80'],
-        description: 'A colorful blend of dark chocolate-dipped almonds and white chocolate-coated blueberries and tart cranberries.'
-      },
-      {
-        id: 'choco_prod_01',
-        title: 'Signature Belgian Dark Truffle Collection',
-        category: 'Handcrafted Truffles & Bonbons',
-        sub_category: 'Belgian Truffles',
-        cocoa_percentage: '70% Pure Cocoa Ganache',
-        mrp: 799,
-        price: 649,
-        rating: 4.9,
-        review_count: 38,
-        featured: true,
-        best_seller: false,
-        variants: { 'Box of 6': 0, 'Box of 12': 0 },
-        out_of_stock: true,
-        images: ['https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=800&q=80', 'https://images.unsplash.com/photo-1548907040-4baa42d10919?w=800&q=80'],
-        description: 'Silky, melt-in-the-mouth Belgian dark chocolate truffles with a rich velvet ganache center, dusted in single-origin cocoa powder.'
-      },
-      {
-        id: 'choco_prod_02',
-        title: 'Madagascar 72% Single Origin Artisan Dark Bar',
-        category: 'Dark Chocolates',
-        sub_category: 'Single Origin',
-        cocoa_percentage: '72% Single Origin',
-        mrp: 350,
-        price: 280,
-        rating: 4.9,
-        review_count: 52,
-        featured: true,
-        best_seller: false,
-        variants: { '100g Bar': 2, '200g Pack': 1 },
-        images: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&q=80'],
-        description: 'Bean-to-bar artisanal dark chocolate crafted exclusively from Madagascar Trinitario beans, showcasing bright fruity notes.'
-      },
-      {
-        id: 'choco_prod_03',
-        title: 'Roasted California Almond & Himalayan Pink Salt Bark',
-        category: 'Nutty Barks & Clusters',
-        sub_category: 'Almond Rocher',
-        cocoa_percentage: '60% Semi-Dark Cocoa',
-        mrp: 499,
-        price: 399,
-        rating: 4.8,
-        review_count: 29,
-        featured: false,
-        best_seller: false,
-        variants: { '150g Pouch': 1, '300g Tin': 1 },
-        images: ['https://images.unsplash.com/photo-1575372587186-500b3d1ee98a?w=800&q=80'],
-        description: 'Thick, crunchy artisan bark loaded with whole slow-roasted California almonds and sprinkled with pure Himalayan pink salt.'
-      },
-      {
-        id: 'choco_prod_04',
-        title: 'Creamy Hazelnut Praline Milk Chocolate Bonbons',
-        category: 'Milk & Creamy Chocolates',
-        sub_category: 'Classic Milk Silk',
-        cocoa_percentage: '45% Alpine Milk Cocoa',
-        mrp: 650,
-        price: 520,
-        rating: 4.9,
-        review_count: 44,
-        featured: true,
-        best_seller: true,
-        variants: { 'Box of 8': 3, 'Box of 16': 1 },
-        images: ['https://images.unsplash.com/photo-1548907040-4baa42d10919?w=800&q=80'],
-        description: 'Piedmont roasted hazelnut praline enveloped in velvety smooth alpine milk chocolate shell.'
-      },
-      {
-        id: 'choco_prod_05',
-        title: 'Grand Royal Gourmet Hamper (Chocolates & Mixtures)',
-        category: 'Luxury Gift Boxes & Hampers',
-        sub_category: 'Mix & Bar Hamper',
-        cocoa_percentage: 'Assorted Gourmet Selection',
-        mrp: 2199,
-        price: 1799,
-        rating: 5.0,
-        review_count: 42,
-        featured: true,
-        best_seller: true,
-        variants: { 'Grand Hamper Chest': 1, 'Royal Deluxe Hamper': 1 },
-        images: ['https://images.unsplash.com/photo-1526081347589-7fa3cb41b4b2?w=800&q=80'],
-        description: 'The definitive luxury hamper uniting our best-selling artisanal dark chocolates with crunchy nut and pretzel mixtures.'
-      },
-      {
-        id: 'choco_prod_07',
-        title: 'Zero Sugar 85% Keto Dark Chocolate with Stevia',
-        category: 'Sugar-Free & Keto Treats',
-        sub_category: 'Stevia Sweetened 85%',
-        cocoa_percentage: '85% Extra Dark (Zero Sugar)',
-        mrp: 420,
-        price: 340,
-        rating: 4.7,
-        review_count: 19,
-        featured: false,
-        best_seller: false,
-        variants: { '90g Bar': 1, 'Pack of 3': 1 },
-        images: ['https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=800&q=80'],
-        description: 'Guilt-free indulgence crafted for diabetic, keto, and health-conscious chocolate lovers.'
-      }
-    ];
-
-    let allProducts = [...DEFAULT_PRODUCTS];
+    let allCategories = [];
+    let allProducts = [];
     let currentCategory = 'All';
     let currentProductDetail = null;
     let selectedDetailVariant = null;
@@ -830,13 +673,22 @@
       showQuickToast(`Added "${p.title}" to Cart! 🛒`, '🍫');
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      renderCategoryPills(DEFAULT_CATEGORIES);
-      renderProducts(allProducts);
+    function showCatalogLoading() {
+      const grid = document.getElementById('products-grid');
+      if (grid) {
+        grid.innerHTML = `
+          <div class="col-span-full py-20 text-center">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-choco-300 border-t-choco-800 mb-4"></div>
+            <p class="text-sm font-semibold text-choco-800">Fetching live products from database...</p>
+          </div>
+        `;
+      }
+    }
 
+    document.addEventListener('DOMContentLoaded', async () => {
+      showCatalogLoading();
       await fetchStoreSettings();
-      await fetchCategories();
-      await fetchProducts();
+      await Promise.all([fetchCategories(), fetchProducts()]);
       updateCartUI();
       bindEvents();
 
@@ -895,7 +747,7 @@
     }
 
     function applyStoreSettings() {
-      const name = storeSettings.brandName || storeSettings.brand_name || 'CookLux';
+      const name = storeSettings.brandName || storeSettings.brand_name || 'SnackzTin';
       const tagline = storeSettings.tagline || '';
       const announcement = storeSettings.announcementText || storeSettings.announcement_text || '';
       const whatsapp = storeSettings.whatsappNumber || storeSettings.whatsapp_number || '918078864233';
@@ -911,7 +763,7 @@
       if (document.getElementById('footer-tagline')) document.getElementById('footer-tagline').innerText = tagline;
       document.getElementById('footer-copy-brand').innerText = name;
       document.getElementById('footer-whatsapp').innerText = '+' + whatsapp;
-      document.getElementById('footer-email').innerText = storeSettings.contactEmail || 'orders@cooklux.com';
+      document.getElementById('footer-email').innerText = storeSettings.contactEmail || storeSettings.contact_email || 'orders@snackztin.com';
 
       // Dynamic Brand Logo Everywhere
       const logo = storeSettings.logoUrl || storeSettings.logo_url || '';
@@ -958,17 +810,20 @@
         const res = await fetch(apiUrl('/api/categories'));
         if (res.ok) {
           const cats = await res.json();
-          if (Array.isArray(cats) && cats.length > 0) {
-            renderCategoryPills(cats);
-          }
+          allCategories = Array.isArray(cats) ? cats : [];
+          renderCategoryPills(allCategories);
+        } else {
+          renderCategoryPills([]);
         }
       } catch (err) {
-        console.warn('Could not load categories:', err);
+        console.error('Could not load categories from database:', err);
+        renderCategoryPills([]);
       }
     }
 
     function renderCategoryPills(categories) {
       const container = document.getElementById('category-pills');
+      if (!container) return;
       const pillsHtml = categories.map(cat => `
         <button data-cat="${cat.name}" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-choco-800 border border-choco-200 hover:border-choco-900 shadow-xs whitespace-nowrap transition-all">
           ${cat.name} ${cat.icon || '🍫'}
@@ -1014,13 +869,15 @@
         const res = await fetch(apiUrl('/api/products'));
         if (res.ok) {
           const prods = await res.json();
-          if (Array.isArray(prods) && prods.length > 0) {
-            allProducts = prods;
-            applySearchAndFilter();
-          }
+          allProducts = Array.isArray(prods) ? prods : [];
+        } else {
+          allProducts = [];
         }
       } catch (err) {
-        console.warn('Backend products not reachable, running with default artisanal catalog:', err);
+        console.error('Could not load products from database:', err);
+        allProducts = [];
+      } finally {
+        applySearchAndFilter();
       }
     }
 
@@ -1076,8 +933,8 @@
       if (!products.length) {
         grid.innerHTML = '';
         empty.classList.remove('hidden');
-        document.getElementById('empty-title').innerText = 'No treats found';
-        document.getElementById('empty-desc').innerText = 'Try another category or search keyword.';
+        document.getElementById('empty-title').innerText = allProducts.length === 0 ? 'No products in database' : 'No treats found';
+        document.getElementById('empty-desc').innerText = allProducts.length === 0 ? 'Products added to the database via Admin will appear here.' : 'Try another category or search keyword.';
         return;
       }
 
@@ -1230,7 +1087,7 @@
       document.getElementById('detail-qty-val').innerText = detailQty;
 
       // Update URL and Title
-      const brand = storeSettings.brandName || storeSettings.brand_name || 'CookLux';
+      const brand = storeSettings.brandName || storeSettings.brand_name || 'SnackzTin';
       document.title = `${p.title} — ${brand}`;
       if (push) history.pushState(null, '', `/product/${p.id}`);
 
@@ -1466,7 +1323,7 @@ Please confirm availability and delivery details. Thank you!`;
 
     function orderDetailOnWhatsApp() {
       if (!currentProductDetail) return;
-      const brand = storeSettings.brandName || 'CookLux';
+      const brand = storeSettings.brandName || 'SnackzTin';
       const phone = storeSettings.whatsappNumber || '918078864233';
 
       const msg =
@@ -1612,7 +1469,7 @@ Please confirm availability and sharing delivery details. Thank you!`;
         const data = await res.json();
         const orderNumber = data.order ? data.order.order_number : ('CHOC-' + Math.floor(100000 + Math.random() * 900000));
 
-        const brand = storeSettings.brandName || 'CookLux';
+        const brand = storeSettings.brandName || 'SnackzTin';
         const origin = window.location.origin;
         const itemsList = cart.map(it => {
           const prodLink = it.id ? `\n    🔗 Link: ${origin}/product/${it.id}` : '';
