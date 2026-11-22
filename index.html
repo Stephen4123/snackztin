@@ -6,7 +6,26 @@
   <base href="/">
   <script src="js/config.js"></script>
   <link id="site-favicon" rel="icon" type="image/png" href="/uploads/choco-1795357882540-491298133.png">
-  <title id="page-title">SnackzTin</title>
+  <title id="page-title">SnackzTin — Handcrafted Chocolates, Snacks & Mixtures</title>
+
+  <!-- Primary Meta & Social Media Preview Cards (WhatsApp, Facebook, Twitter, iMessage) -->
+  <meta name="title" content="SnackzTin — Handcrafted Chocolates, Snacks & Mixtures">
+  <meta name="description" content="Order handcrafted chocolates, artisanal barks, crunchy mixtures, and luxury gift hampers directly on WhatsApp. Melt-free delivery across India.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SnackzTin">
+  <meta property="og:url" content="https://snackztin.web.app/">
+  <meta property="og:title" id="og-title" content="SnackzTin — Handcrafted Chocolates, Snacks & Mixtures">
+  <meta property="og:description" id="og-desc" content="Order handcrafted chocolates, artisanal barks, crunchy mixtures, and luxury gift hampers directly on WhatsApp. Melt-free delivery across India.">
+  <meta property="og:image" id="og-image" content="https://snackztin.web.app/og-preview.jpg">
+  <meta property="og:image:secure_url" content="https://snackztin.web.app/og-preview.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SnackzTin — Handcrafted Chocolates, Snacks & Mixtures">
+  <meta name="twitter:description" content="Order handcrafted chocolates, artisanal barks, crunchy mixtures, and luxury gift hampers directly on WhatsApp.">
+  <meta name="twitter:image" content="https://snackztin.web.app/og-preview.jpg">
+  <link rel="image_src" href="https://snackztin.web.app/og-preview.jpg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -191,8 +210,8 @@
         </div>
       </div>
 
-      <!-- REDESIGNED PRODUCT GRID (4-COLUMN STANDARD E-COMMERCE CARDS LIKE REFERENCE IMAGE) -->
-      <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
+      <!-- 5-COLUMN PRODUCT GRID (STREAMLINED E-COMMERCE CARDS) -->
+      <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-3 sm:gap-4.5">
         <!-- Rendered by JS -->
       </div>
 
@@ -222,172 +241,224 @@
   </div>
 
   <!-- ============================================================== -->
-  <!-- VIEW 2: DEDICATED FULL PRODUCT DETAIL PAGE                     -->
+  <!-- VIEW 2: DEDICATED FULL PRODUCT DETAIL PAGE (COMPACT E-COMMERCE) -->
   <!-- ============================================================== -->
   <div id="view-product" class="flex-1 hidden">
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+    <main class="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       
-      <!-- Back to Catalog Link & Breadcrumbs -->
-      <div class="flex items-center justify-between mb-8 pb-4 border-b border-choco-200">
-        <button onclick="navigateTo('listing')" class="inline-flex items-center gap-2 text-xs font-bold text-choco-800 hover:text-choco-950 bg-white px-4 py-2 rounded-xl border border-choco-200 hover:border-choco-900 shadow-xs transition-all">
-          <span>← Back to All Treats</span>
-        </button>
-        <div class="text-xs text-choco-600 font-medium hidden sm:flex items-center gap-1.5">
-          <span id="page-breadcrumb-cat" class="text-choco-800">Category</span>
-          <span>/</span>
-          <span id="page-breadcrumb-title" class="text-choco-950 font-bold truncate max-w-xs">Product Title</span>
+      <!-- Top Bar: Back to Treats & Breadcrumbs & Share -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <button onclick="navigateTo('listing')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-choco-800 hover:text-choco-950 bg-white px-3.5 py-1.5 rounded-full border border-choco-200/80 shadow-xs hover:border-choco-400 transition-all">
+            <span>← Back to All Treats</span>
+          </button>
+          <div class="text-[11px] text-choco-500 font-medium hidden sm:flex items-center gap-1.5 ml-2">
+            <span id="page-breadcrumb-cat" class="text-choco-700">Category</span>
+            <span>/</span>
+            <span id="page-breadcrumb-title" class="text-choco-950 font-bold truncate max-w-xs">Product Title</span>
+          </div>
         </div>
+
+        <button onclick="copyProductLink(event)" id="btn-copy-prod-link" title="Copy Product Link" class="w-8 h-8 rounded-full bg-white border border-choco-200/80 text-choco-600 hover:text-choco-950 flex items-center justify-center text-xs shadow-xs hover:border-choco-400 transition-all active:scale-90">
+          🔗
+        </button>
       </div>
 
-      <!-- Product Showcase Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-        
-        <!-- Left: Image Gallery & Badges -->
-        <div class="space-y-4">
-          <div class="aspect-square rounded-3xl overflow-hidden bg-white border border-choco-200 shadow-xl relative group">
-            <img id="detail-main-img" src="" alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-            <span id="detail-cocoa-badge" class="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-choco-950/85 backdrop-blur-md text-gold-400 text-xs font-bold uppercase tracking-wider shadow-md">
-              70% Cocoa
-            </span>
-            <span id="detail-bestseller-badge" class="absolute top-4 right-4 px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-bold uppercase tracking-wider shadow-md hidden">
-              Best Seller ⭐
-            </span>
-          </div>
+      <!-- MAIN COMPACT SHOWCASE CARD (FAITHFUL TO REFERENCE DESIGN) -->
+      <div class="bg-white rounded-3xl border border-choco-200/80 shadow-sm p-4 sm:p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-8 items-start">
+          
+          <!-- Left Column: Gallery & Badges (md:col-span-5) -->
+          <div class="md:col-span-5 flex flex-col space-y-3">
+            <div class="flex flex-row gap-2.5 items-start">
+              <!-- Vertical Thumbnails Column (matching reference) -->
+              <div id="detail-thumbnails-strip" class="flex flex-col gap-2 shrink-0 max-h-[340px] overflow-y-auto custom-scrollbar"></div>
 
-          <!-- Thumbnails Strip -->
-          <div id="detail-thumbnails-strip" class="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar"></div>
-
-          <!-- Feature Badges -->
-          <div class="grid grid-cols-3 gap-3 pt-2 text-center text-xs">
-            <div class="p-3 rounded-2xl bg-white border border-choco-100 shadow-xs">
-              <span class="text-base block mb-1">🟢</span>
-              <span class="font-bold text-choco-900 block" id="detail-dietary-badge">100% Veg</span>
-              <span class="text-[10px] text-choco-500">Eggless recipe</span>
-            </div>
-            <div class="p-3 rounded-2xl bg-white border border-choco-100 shadow-xs">
-              <span class="text-base block mb-1">❄️</span>
-              <span class="font-bold text-choco-900 block">Cold-Box Pack</span>
-              <span class="text-[10px] text-choco-500">Melt-free arrival</span>
-            </div>
-            <div class="p-3 rounded-2xl bg-white border border-choco-100 shadow-xs">
-              <span class="text-base block mb-1">🍫</span>
-              <span class="font-bold text-choco-900 block">Pure Butter</span>
-              <span class="text-[10px] text-choco-500">Zero palm oil</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Specs & Actions -->
-        <div class="space-y-6">
-          <div>
-            <div class="flex items-center justify-between text-xs font-semibold">
-              <span id="detail-category" class="text-gold-600 uppercase tracking-widest font-bold">Category</span>
-              <div class="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                <span class="text-amber-500">★★★★★</span>
-                <span id="detail-rating" class="font-bold text-amber-900">4.9</span>
-                <span id="detail-review-count" class="text-amber-700">(48 reviews)</span>
+              <!-- Main Image Display -->
+              <div class="flex-1 aspect-[4/5] sm:aspect-square max-h-[350px] rounded-2xl overflow-hidden bg-choco-50/40 border border-choco-200/70 relative group flex items-center justify-center">
+                <img id="detail-main-img" src="" alt="Product" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                <span id="detail-cocoa-badge" class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-choco-950/85 backdrop-blur-md text-gold-400 text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                  70% Cocoa
+                </span>
+                <span id="detail-bestseller-badge" class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-rose-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-xs hidden">
+                  Best Seller ⭐
+                </span>
               </div>
             </div>
 
-            <h1 id="detail-title" class="font-serif text-3xl sm:text-4xl font-extrabold text-choco-950 mt-2 leading-tight">
+            <!-- 3 Compact Feature Badges Under Image -->
+            <div class="grid grid-cols-3 gap-2 text-center text-xs pt-1">
+              <div class="p-2 rounded-xl bg-choco-50/50 border border-choco-100">
+                <span class="text-xs block mb-0.5">🟢</span>
+                <span class="font-bold text-choco-900 block text-[11px]" id="detail-dietary-badge">100% Veg</span>
+                <span class="text-[9px] text-choco-500 block">Eggless recipe</span>
+              </div>
+              <div class="p-2 rounded-xl bg-choco-50/50 border border-choco-100">
+                <span class="text-xs block mb-0.5">❄️</span>
+                <span class="font-bold text-choco-900 block text-[11px]">Cold-Box</span>
+                <span class="text-[9px] text-choco-500 block">Melt-free arrival</span>
+              </div>
+              <div class="p-2 rounded-xl bg-choco-50/50 border border-choco-100">
+                <span class="text-xs block mb-0.5">🍫</span>
+                <span class="font-bold text-choco-900 block text-[11px]">Pure Butter</span>
+                <span class="text-[9px] text-choco-500 block">Zero palm oil</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Specs & Actions (md:col-span-7) -->
+          <div class="md:col-span-7 space-y-3">
+            <!-- Category Header & Rating Pill -->
+            <div class="flex items-center justify-between">
+              <span id="detail-category" class="text-gold-700 text-[11px] font-bold uppercase tracking-wider">Category</span>
+              <div class="flex items-center gap-1 bg-amber-50/80 px-2 py-0.5 rounded-full border border-amber-200/80 text-[11px]">
+                <span class="text-amber-500 font-bold leading-none">★</span>
+                <span id="detail-rating" class="font-bold text-amber-900">4.9</span>
+                <span id="detail-review-count" class="text-amber-700 text-[10px]">(48 reviews)</span>
+              </div>
+            </div>
+
+            <!-- Title -->
+            <h1 id="detail-title" class="font-serif text-xl sm:text-2xl font-bold text-choco-950 leading-tight">
               Chocolate & Mixture Title
             </h1>
-          </div>
 
-          <!-- Pricing Block -->
-          <div class="p-4 rounded-2xl bg-white border border-choco-200 shadow-xs flex items-baseline gap-4">
-            <span id="detail-price" class="text-3xl font-extrabold text-choco-950">₹0</span>
-            <span id="detail-mrp" class="text-base text-choco-400 line-through">₹0</span>
-            <span id="detail-discount" class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-100">
-              Save 20%
-            </span>
-          </div>
-
-          <!-- Description -->
-          <p id="detail-description" class="text-sm text-choco-700 leading-relaxed font-normal">
-            Detailed sensory description.
-          </p>
-
-          <!-- Variant / Weight Selector -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-xs font-bold text-choco-900 uppercase tracking-wider">Select Size / Pack Weight:</label>
-              <span id="detail-stock-indicator" class="text-[11px] font-bold text-emerald-700">● In Stock</span>
-            </div>
-            <div id="detail-variants-container" class="flex flex-wrap gap-2.5"></div>
-          </div>
-
-          <!-- Quantity & Action CTAs -->
-          <div class="space-y-3 pt-2">
-            <div class="flex items-center gap-4">
-              <div class="flex items-center bg-white border border-choco-300 rounded-2xl px-3 py-2 shadow-xs">
-                <button id="detail-qty-minus" class="w-8 h-8 font-bold text-choco-700 hover:text-choco-950 text-base flex items-center justify-center">-</button>
-                <span id="detail-qty-val" class="w-8 text-center font-bold text-sm text-choco-950">1</span>
-                <button id="detail-qty-plus" class="w-8 h-8 font-bold text-choco-700 hover:text-choco-950 text-base flex items-center justify-center">+</button>
+            <!-- Pricing Row & Free Delivery Note -->
+            <div class="flex items-baseline justify-between flex-wrap gap-2 py-1 border-b border-choco-100">
+              <div class="flex items-baseline gap-2.5">
+                <span id="detail-price" class="text-2xl sm:text-3xl font-extrabold text-choco-950">₹0</span>
+                <span id="detail-mrp" class="text-sm text-choco-400 line-through">₹0</span>
+                <span id="detail-discount" class="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100">
+                  Save 20%
+                </span>
               </div>
+              <div class="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                <span>🚚 Free Delivery > ₹799</span>
+              </div>
+            </div>
 
-              <button id="detail-add-cart-btn" class="flex-1 py-3.5 px-6 rounded-2xl bg-choco-950 hover:bg-choco-900 text-white font-bold text-sm shadow-md transition-all active:scale-98 flex items-center justify-center gap-2">
-                <span>Add to Cart Box</span>
-                <span class="text-gold-400">🛒</span>
+            <!-- Short Sensory Description -->
+            <p id="detail-description" class="text-xs sm:text-[13px] text-choco-700 leading-relaxed font-normal line-clamp-2 hover:line-clamp-none transition-all">
+              Sensory description of this artisanal recipe.
+            </p>
+
+            <!-- 4-Grid Meta Specs (Recipe / Category / Shelf Life / Packaging) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl bg-choco-50/50 border border-choco-100 text-[11px]">
+              <div>
+                <span class="text-[9px] uppercase tracking-wider text-choco-400 block font-bold">RECIPE</span>
+                <span id="detail-spec-cocoa" class="font-semibold text-choco-900 truncate block">Artisan Blend</span>
+              </div>
+              <div>
+                <span class="text-[9px] uppercase tracking-wider text-choco-400 block font-bold">CATEGORY</span>
+                <span id="detail-spec-cat" class="font-semibold text-choco-900 truncate block">Confections</span>
+              </div>
+              <div>
+                <span class="text-[9px] uppercase tracking-wider text-choco-400 block font-bold">SHELF LIFE</span>
+                <span id="detail-spec-shelflife" class="font-semibold text-choco-900 truncate block">6 Months</span>
+              </div>
+              <div>
+                <span class="text-[9px] uppercase tracking-wider text-choco-400 block font-bold">PACKAGING</span>
+                <span class="font-semibold text-choco-900 truncate block">Cold-Box Pack</span>
+              </div>
+            </div>
+
+            <!-- Variant / Weight Selector -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-[10px] font-bold text-choco-800 uppercase tracking-wider">SELECT SIZE / PACK WEIGHT:</label>
+              </div>
+              <div id="detail-variants-container" class="flex flex-wrap gap-2"></div>
+              <div class="mt-1.5">
+                <span id="detail-stock-indicator" class="text-[11px] font-semibold text-amber-700">● In Stock</span>
+              </div>
+            </div>
+
+            <!-- QTY Stepper & Subtotal Row (matching reference) -->
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-choco-800 uppercase tracking-wider">QTY:</span>
+                <div class="flex items-center bg-white border border-choco-200 rounded-xl px-2 py-1 shadow-xs">
+                  <button id="detail-qty-minus" class="w-6 h-6 font-bold text-choco-700 hover:text-choco-950 text-sm flex items-center justify-center">-</button>
+                  <span id="detail-qty-val" class="w-7 text-center font-bold text-xs text-choco-950">1</span>
+                  <button id="detail-qty-plus" class="w-6 h-6 font-bold text-choco-700 hover:text-choco-950 text-sm flex items-center justify-center">+</button>
+                </div>
+                <span class="text-[10px] text-choco-400">(Max 10 units)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] uppercase tracking-wider text-choco-500 font-bold block">SUBTOTAL</span>
+                <span id="detail-subtotal-val" class="text-base font-extrabold text-choco-950">₹0</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons Row (Side-by-side matching reference image!) -->
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+              <button id="detail-add-cart-btn" class="py-2.5 px-3 rounded-xl bg-choco-950 hover:bg-choco-900 text-white font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-98 flex items-center justify-center gap-1.5">
+                <span>🛒 Add to Cart</span>
+              </button>
+              <button id="detail-whatsapp-btn" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-98 flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                </svg>
+                <span class="truncate">Order on WhatsApp</span>
               </button>
             </div>
 
-            <!-- Direct Buy on WhatsApp Button -->
-            <button id="detail-whatsapp-btn" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all active:scale-98 flex items-center justify-center gap-2.5">
-              <span>Order Instantly on WhatsApp</span>
-              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-              </svg>
-            </button>
-          </div>
+            <!-- Accordion Details (Compact) -->
+            <div class="space-y-1.5 pt-1 text-xs">
+              <details class="bg-choco-50/40 rounded-xl border border-choco-100 p-2.5 group">
+                <summary class="font-bold text-choco-900 cursor-pointer list-none flex items-center justify-between text-[11px]">
+                  <span>🌾 Ingredients & Allergen Advice</span>
+                  <span class="text-choco-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <p id="detail-ingredients" class="mt-1.5 text-choco-600 text-[11px] leading-relaxed"></p>
+              </details>
 
-          <!-- Cold-Box Guarantee Banner -->
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-xs text-blue-950 flex items-start gap-3">
-            <span class="text-2xl">❄️</span>
-            <div>
-              <span class="font-bold block">Cold-Box Thermal Packaging Guarantee</span>
-              <p class="text-[11px] text-blue-800 mt-0.5 leading-relaxed">
-                Shipped with thermal bubble insulation and frozen food-grade ice cooling pads. Guaranteed melt-free delivery across India.
-              </p>
+              <details class="bg-choco-50/40 rounded-xl border border-choco-100 p-2.5 group">
+                <summary class="font-bold text-choco-900 cursor-pointer list-none flex items-center justify-between text-[11px]">
+                  <span>🌡️ Storage & Shelf Life</span>
+                  <span class="text-choco-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="mt-1.5 text-choco-600 text-[11px] space-y-0.5">
+                  <p>• <b>Shelf Life:</b> <span id="detail-shelflife">6 Months</span></p>
+                  <p>• <b>Storage:</b> Store in a cool, dry place (15°C - 20°C).</p>
+                </div>
+              </details>
             </div>
-          </div>
 
-          <!-- Accordion Details -->
-          <div class="space-y-2 pt-2 border-t border-choco-200 text-xs">
-            <details class="bg-white rounded-2xl border border-choco-100 p-4 group" open>
-              <summary class="font-bold text-choco-900 cursor-pointer list-none flex items-center justify-between">
-                <span>🌾 Ingredients & Allergen Advice</span>
-                <span class="text-choco-400 group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <p id="detail-ingredients" class="mt-2 text-choco-600 leading-relaxed"></p>
-            </details>
-
-            <details class="bg-white rounded-2xl border border-choco-100 p-4 group">
-              <summary class="font-bold text-choco-900 cursor-pointer list-none flex items-center justify-between">
-                <span>🌡️ Storage & Shelf Life</span>
-                <span class="text-choco-400 group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div class="mt-2 text-choco-600 space-y-1">
-                <p>• <b>Shelf Life:</b> <span id="detail-shelflife">6 Months</span></p>
-                <p>• <b>Storage:</b> Store in a cool, dry place between 15°C - 20°C. Keep away from direct heat and moisture.</p>
-              </div>
-            </details>
           </div>
         </div>
       </div>
 
-      <!-- RELATED PRODUCTS -->
-      <section class="mt-20 pt-12 border-t border-choco-200">
-        <div class="flex items-center justify-between mb-8">
+      <!-- CUSTOMER REVIEWS & RATINGS (MATCHING REFERENCE DESIGN) -->
+      <div class="bg-white rounded-3xl border border-choco-200/80 shadow-sm p-4 sm:p-5 mb-6 text-center">
+        <div class="flex items-center justify-between pb-3 border-b border-choco-100">
+          <div class="text-left">
+            <h3 class="font-serif text-base sm:text-lg font-bold text-choco-950">Customer Reviews & Ratings</h3>
+            <p class="text-[11px] text-choco-500">Real verified feedback from chocolate lovers</p>
+          </div>
+          <button type="button" onclick="showNotification('Review form opens for verified buyers ✍️')" class="px-3 py-1 rounded-xl border border-choco-300 text-xs font-semibold text-choco-800 hover:bg-choco-50 transition-colors shadow-xs">
+            ✍️ Write a Review
+          </button>
+        </div>
+        <div class="py-3">
+          <span class="text-xl block mb-0.5">💬</span>
+          <p class="text-xs font-semibold text-choco-800">Verified Sweet Reviews</p>
+          <p class="text-[11px] text-choco-500 mt-0.5">Rated 4.9/5 based on 48 verified purchases across India</p>
+        </div>
+      </div>
+
+      <!-- RELATED PRODUCTS (5-GRID DISPLAY) -->
+      <section class="mt-6 pt-6 border-t border-choco-200">
+        <div class="flex items-center justify-between mb-4">
           <div>
-            <span class="text-gold-600 text-xs font-bold uppercase tracking-widest">Handcrafted Pairings</span>
-            <h2 class="font-serif text-2xl font-bold text-choco-950">You May Also Crave</h2>
+            <span class="text-gold-600 text-[10px] font-bold uppercase tracking-widest block">Handcrafted Pairings</span>
+            <h2 class="font-serif text-lg sm:text-xl font-bold text-choco-950">You May Also Crave</h2>
           </div>
           <button onclick="navigateTo('listing')" class="text-xs font-bold text-choco-700 hover:text-choco-950">
             View All Catalog ↗
           </button>
         </div>
-        <div id="detail-related-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6"></div>
+        <div id="detail-related-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"></div>
       </section>
     </main>
   </div>
@@ -1127,10 +1198,18 @@
 
       const strip = document.getElementById('detail-thumbnails-strip');
       strip.innerHTML = images.map((img, idx) => `
-        <button onclick="changeDetailMainImg('${img}', this)" class="detail-thumb-btn w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${idx === 0 ? 'border-choco-950 scale-105' : 'border-choco-200 opacity-70'}">
+        <button onclick="changeDetailMainImg('${img}', this)" class="detail-thumb-btn w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden border-2 transition-all ${idx === 0 ? 'border-choco-950 scale-105 shadow-xs' : 'border-choco-200 opacity-60 hover:opacity-100'}">
           <img src="${img}" class="w-full h-full object-cover">
         </button>
       `).join('');
+
+      // 4-Grid Specs
+      const specCocoa = document.getElementById('detail-spec-cocoa');
+      if (specCocoa) specCocoa.innerText = p.cocoa_percentage || 'Artisan Recipe';
+      const specCat = document.getElementById('detail-spec-cat');
+      if (specCat) specCat.innerText = p.category || 'Confections';
+      const specShelflife = document.getElementById('detail-spec-shelflife');
+      if (specShelflife) specShelflife.innerText = p.shelf_life || '6 Months';
 
       // Variants
       const vars = p.variants || {};
@@ -1139,12 +1218,26 @@
 
       const varsContainer = document.getElementById('detail-variants-container');
       varsContainer.innerHTML = keys.map((key, idx) => `
-        <button onclick="selectDetailVariant('${key}', this)" class="detail-var-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${idx === 0 ? 'bg-choco-950 text-white border-choco-950 shadow-xs' : 'bg-white text-choco-900 border-choco-200 hover:border-choco-400'}">
+        <button onclick="selectDetailVariant('${key}', this)" class="detail-var-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${idx === 0 ? 'bg-choco-950 text-white border-choco-950 shadow-xs' : 'bg-white text-choco-900 border-choco-200 hover:border-choco-400'}">
           ${key}
         </button>
       `).join('');
 
       updateDetailStockStatus();
+      updateDetailSubtotal();
+
+      // Dynamic Meta Tags (Client-side sync)
+      try {
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.content = `${p.title} — ₹${p.price} | ${brand}`;
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.content = p.description || `Order ${p.title} at ₹${p.price} on ${brand}`;
+        const ogImg = document.querySelector('meta[property="og:image"]');
+        if (ogImg && images[0]) ogImg.content = images[0];
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.content = `${window.location.origin}/product/${p.id}`;
+      } catch (_) {}
+
       loadDetailRelatedProducts(p.category, p.id);
       navigateTo('product', false);
     }
@@ -1187,8 +1280,30 @@
       }
     }
 
+    function updateDetailSubtotal() {
+      if (!currentProductDetail) return;
+      const price = Number(currentProductDetail.price) || 0;
+      const subtotal = price * detailQty;
+      const el = document.getElementById('detail-subtotal-val');
+      if (el) el.innerText = `₹${subtotal}`;
+    }
+
+    function copyProductLink(e) {
+      if (e) e.stopPropagation();
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showNotification('Product link copied to clipboard! 📋');
+        }).catch(() => {
+          prompt('Copy product link:', url);
+        });
+      } else {
+        prompt('Copy product link:', url);
+      }
+    }
+
     function loadDetailRelatedProducts(category, excludeId) {
-      const filtered = allProducts.filter(p => p.id !== excludeId).slice(0, 4);
+      const filtered = allProducts.filter(p => p.id !== excludeId).slice(0, 5);
       const grid = document.getElementById('detail-related-grid');
       grid.innerHTML = filtered.map((p, idx) => {
         const rawImg = (Array.isArray(p.images) && p.images[0]) || 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=800&q=80';
@@ -1200,9 +1315,9 @@
 
         let urgencyHtml = '';
         if (isOutOfStock) {
-          urgencyHtml = `<span class="text-xs font-semibold text-rose-600 tracking-tight">Out of Stock</span>`;
+          urgencyHtml = `<span class="text-[10px] font-semibold text-rose-600 tracking-tight">Out of Stock</span>`;
         } else {
-          urgencyHtml = `<span class="text-xs font-semibold text-amber-600 tracking-tight">Only 1 left!</span>`;
+          urgencyHtml = `<span class="text-[10px] font-semibold text-amber-600 tracking-tight">Only 1 left!</span>`;
         }
 
         const mrp = Number(p.mrp);
@@ -1220,51 +1335,51 @@
               <div class="aspect-[3/4] rounded-t-2xl overflow-hidden bg-[#faf8f5] relative">
                 <img src="${img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" loading="lazy">
 
-                <span class="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-slate-800/85 text-white shadow-xs backdrop-blur-xs select-none">
-                  AD
-                </span>
+                ${hasDiscount ? `
+                  <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-rose-500 text-white shadow-xs select-none">
+                    +${discountPct}%
+                  </span>
+                ` : ''}
 
-                <button type="button" onclick="toggleWishlist('${p.id}', event)" class="wishlist-btn absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-600 shadow-sm flex items-center justify-center transition-all active:scale-90" title="Add to Wishlist">
-                  <span class="text-xs sm:text-sm heart-icon leading-none">♡</span>
+                <button type="button" onclick="toggleWishlist('${p.id}', event)" class="wishlist-btn absolute top-2 right-2 w-7 h-7 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-rose-600 shadow-xs flex items-center justify-center transition-all active:scale-90" title="Add to Wishlist">
+                  <span class="text-xs heart-icon leading-none">♡</span>
                 </button>
 
-                <div class="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md border border-slate-100 shadow-xs flex items-center gap-1 text-[10.5px] sm:text-[11px] font-semibold text-slate-800 pointer-events-none select-none">
+                <div class="absolute bottom-2 left-2 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded-md border border-slate-100 shadow-xs flex items-center gap-1 text-[10px] font-semibold text-slate-800 pointer-events-none select-none">
                   <span>${p.rating || '4.8'}</span>
-                  <span class="text-emerald-600 text-xs font-bold leading-none">★</span>
-                  <span class="text-slate-300 font-light mx-0.5 leading-none">|</span>
-                  <span class="text-slate-500 font-normal text-[10px] leading-none">${p.review_count || '12'}</span>
+                  <span class="text-emerald-600 font-bold leading-none">★</span>
                 </div>
 
-                <button type="button" onclick="quickAddToCart('${p.id}', event)" class="absolute bottom-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-choco-950/90 hover:bg-choco-950 text-white shadow-md flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="Quick Add to Cart">
+                <button type="button" onclick="quickAddToCart('${p.id}', event)" class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-choco-950/90 hover:bg-choco-950 text-white shadow-md flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="Quick Add to Cart">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                   </svg>
                 </button>
               </div>
 
-              <div class="p-3 sm:p-3.5">
-                <h4 class="font-bold text-slate-900 text-sm sm:text-[15px] leading-snug line-clamp-1 group-hover:text-choco-800 transition-colors">
+              <div class="p-2.5 sm:p-3">
+                <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-choco-800 transition-colors">
                   ${p.title}
                 </h4>
-                <p class="text-[11px] sm:text-xs text-slate-500 font-normal truncate mt-1">
+                <p class="text-[10px] sm:text-[11px] text-slate-500 font-normal truncate mt-0.5">
                   ${specLine}
                 </p>
                 <div class="mt-1">
                   ${urgencyHtml}
                 </div>
-                <div class="flex items-center gap-2 mt-1.5 pt-0.5">
-                  ${hasDiscount ? `
-                    <span class="text-emerald-600 font-extrabold text-xs sm:text-sm flex items-center">
-                      <span class="text-[11px] mr-0.5 font-bold">↓</span>${discountPct}%
-                    </span>
-                    <span class="text-slate-400 line-through text-xs sm:text-sm font-normal">
-                      ₹${mrp}
-                    </span>
-                  ` : ''}
-                  <span class="text-slate-900 font-extrabold text-sm sm:text-base tracking-tight">
-                    ₹${price}
-                  </span>
-                </div>
+              </div>
+            </div>
+
+            <div class="p-2.5 sm:p-3 pt-0">
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <span class="font-bold text-slate-950 text-xs sm:text-sm">₹${price}</span>
+                ${hasDiscount ? `<span class="text-[10px] text-slate-400 line-through">₹${mrp}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
               </div>
             </div>
           </div>
@@ -1574,11 +1689,15 @@ Thank you for shopping with *${brand}*!`;
         if (detailQty > 1) {
           detailQty--;
           document.getElementById('detail-qty-val').innerText = detailQty;
+          updateDetailSubtotal();
         }
       });
       document.getElementById('detail-qty-plus').addEventListener('click', () => {
-        detailQty++;
-        document.getElementById('detail-qty-val').innerText = detailQty;
+        if (detailQty < 10) {
+          detailQty++;
+          document.getElementById('detail-qty-val').innerText = detailQty;
+          updateDetailSubtotal();
+        }
       });
       document.getElementById('detail-add-cart-btn').addEventListener('click', addToCartFromDetail);
       document.getElementById('detail-whatsapp-btn').addEventListener('click', orderDetailOnWhatsApp);

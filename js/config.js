@@ -2,13 +2,10 @@
  * SnackzTin Global Client Configuration
  * Supports local development and deployed production (Firebase + Render backend).
  */
-const DEFAULT_REMOTE_BACKEND = 'https://snackztin-backend.onrender.com';
+const DEFAULT_REMOTE_BACKEND = 'https://snackztin.onrender.com';
 
 function getBackendBaseUrl() {
   if (typeof window === 'undefined') return DEFAULT_REMOTE_BACKEND;
-  if (window.__SNACKZTIN_BACKEND__) return window.__SNACKZTIN_BACKEND__;
-  const stored = localStorage.getItem('snackztin_backend_url');
-  if (stored) return stored;
 
   const { hostname, port } = window.location;
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' || hostname === '';
@@ -19,7 +16,7 @@ function getBackendBaseUrl() {
     return 'http://localhost:3001';
   }
 
-  // Running on Firebase Hosting (e.g. https://snackztin.web.app)
+  if (window.__SNACKZTIN_BACKEND__) return window.__SNACKZTIN_BACKEND__;
   return DEFAULT_REMOTE_BACKEND;
 }
 

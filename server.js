@@ -20,8 +20,11 @@ const COOKIE_NAME = 'chocolux_auth_token';
 // ----------------------------------------------------
 // DATABASE POOL
 // ----------------------------------------------------
+const DEFAULT_DATABASE_URL = 'postgresql://neondb_owner:npg_raQo2gwjR4nx@ep-proud-brook-bed38f79-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const DATABASE_URL = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
@@ -720,6 +723,42 @@ app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Dynamic Open Graph Product Route for WhatsApp & Social Crawlers
+app.get('/product/:id', async (req, res) => {
+  try {
+    const prodId = req.params.id;
+    const result = await pool.query('SELECT * FROM choco_products WHERE id = $1', [prodId]);
+    if (result.rows.length === 0) {
+      return res.sendFile(path.join(__dirname, 'index.html'));
+    }
+    const product = result.rows[0];
+    const settingsRes = await pool.query('SELECT * FROM choco_store_settings WHERE id = 1');
+    const brand = settingsRes.rows[0]?.brand_name || 'SnackzTin';
+
+    let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const rawImg = (Array.isArray(product.images) && product.images[0]) || '';
+    const imgUrl = rawImg.startsWith('http') ? rawImg : `https://snackztin.web.app${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+    const pageTitle = `${product.title} — ₹${product.price} | ${brand}`;
+    const pageDesc = product.description ? product.description.substring(0, 150) : `Order ${product.title} at ₹${product.price} on ${brand}. Fresh handcrafted delivery.`;
+    const prodUrl = `https://snackztin.web.app/product/${product.id}`;
+
+    html = html.replace(/<title id="page-title">.*?<\/title>/i, `<title id="page-title">${pageTitle}</title>`);
+    html = html.replace(/<meta name="title" content=".*?">/i, `<meta name="title" content="${pageTitle}">`);
+    html = html.replace(/<meta name="description" content=".*?">/i, `<meta name="description" content="${pageDesc}">`);
+    html = html.replace(/<meta property="og:title" id="og-title" content=".*?">/i, `<meta property="og:title" id="og-title" content="${pageTitle}">`);
+    html = html.replace(/<meta property="og:description" id="og-desc" content=".*?">/i, `<meta property="og:description" id="og-desc" content="${pageDesc}">`);
+    html = html.replace(/<meta property="og:image" id="og-image" content=".*?">/i, `<meta property="og:image" id="og-image" content="${imgUrl}">`);
+    html = html.replace(/<meta property="og:url" content=".*?">/i, `<meta property="og:url" content="${prodUrl}">`);
+    html = html.replace(/<meta name="twitter:title" content=".*?">/i, `<meta name="twitter:title" content="${pageTitle}">`);
+    html = html.replace(/<meta name="twitter:description" content=".*?">/i, `<meta name="twitter:description" content="${pageDesc}">`);
+    html = html.replace(/<meta name="twitter:image" content=".*?">/i, `<meta name="twitter:image" content="${imgUrl}">`);
+
+    res.send(html);
+  } catch (err) {
+    res.sendFile(path.join(__dirname, 'index.html'));
   }
 });
 

@@ -50,15 +50,15 @@ class WhatsAppService {
   }
 
   async getStoreSettingsFromDB() {
-    if (!this.pool) return { brand_name: 'CookLux' };
+    if (!this.pool) return { brand_name: 'SnackzTin' };
     try {
       const res = await this.pool.query(
         'SELECT brand_name, whatsapp_number, contact_email, contact_phone, min_free_shipping FROM choco_store_settings WHERE id = 1 LIMIT 1'
       );
-      return res.rows[0] || { brand_name: 'CookLux' };
+      return res.rows[0] || { brand_name: 'SnackzTin' };
     } catch (err) {
       console.warn('[WhatsApp] Could not fetch store_settings:', err.message);
-      return { brand_name: 'CookLux' };
+      return { brand_name: 'SnackzTin' };
     }
   }
 
@@ -98,7 +98,7 @@ class WhatsAppService {
         auth: state,
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: ["CookLux Admin", "Chrome", "1.0.0"],
+        browser: ["SnackzTin Admin", "Chrome", "1.0.0"],
         syncFullHistory: false,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 25000,
@@ -346,8 +346,8 @@ class WhatsAppService {
    */
   async notifyOrderPlaced(order) {
     const settings = await this.getStoreSettingsFromDB();
-    const brand = settings.brand_name || 'CookLux';
-    const baseUrl = process.env.SITE_URL || process.env.APP_URL || process.env.BASE_URL || 'http://localhost:3001';
+    const brand = settings.brand_name || 'SnackzTin';
+    const baseUrl = process.env.STORE_URL || process.env.SITE_URL || process.env.APP_URL || process.env.BASE_URL || 'https://snackztin.web.app';
     const custPhone = order.customer?.phone;
     const custName = order.customer?.name || 'Valued Customer';
 
@@ -418,8 +418,8 @@ Please check the Admin Portal to manage and dispatch this order.`;
    */
   async notifyOrderStatus(order, newStatus, customNote = '') {
     const settings = await this.getStoreSettingsFromDB();
-    const brand = settings.brand_name || 'CookLux';
-    const baseUrl = process.env.SITE_URL || process.env.APP_URL || process.env.BASE_URL || 'http://localhost:3001';
+    const brand = settings.brand_name || 'SnackzTin';
+    const baseUrl = process.env.STORE_URL || process.env.SITE_URL || process.env.APP_URL || process.env.BASE_URL || 'https://snackztin.web.app';
     const custPhone = order.customer?.phone;
     if (!custPhone) return;
 
