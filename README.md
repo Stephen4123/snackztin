@@ -1,64 +1,100 @@
-# ChocoLux — Artisanal Handcrafted Chocolates & Luxury Confections
+# SnackzTin — Artisanal Confections, Snacks & Treats
 
-A full-stack, mobile-first, responsive E-commerce web application with **Dynamic Branding**, **Full Admin Portal**, **Direct & Automated WhatsApp Integrations**, and **PostgreSQL (Neon DB) Storage**.
+A full-stack, mobile-first, responsive E-commerce web application with **Dynamic Branding**, **Full Admin Portal with Mobile Drawer**, **PostgreSQL-backed WhatsApp Queue**, and **Continuous Deployment on Firebase & Render**.
+
+- 🌐 **Live Storefront (Firebase)**: [https://snackztin.web.app](https://snackztin.web.app)
+- ⚙️ **Live Admin Portal**: [https://snackztin.web.app/admin](https://snackztin.web.app/admin)
+- 📦 **GitHub Repository**: [https://github.com/Stephen4123/snackztin](https://github.com/Stephen4123/snackztin)
+- 🚀 **Backend Deployment**: Render Blueprint (`render.yaml`)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Stephen4123/snackztin)
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. Dynamic Branding Everywhere
-- **Brand name is completely dynamic**: By default set to **ChocoLux**, but can be changed at any time directly in the **Admin Portal** (`/admin.html` &rarr; Store & Branding Settings).
-- Changing the brand name or tagline immediately updates the website navigation, page titles, footer, meta tags, and generated WhatsApp receipts without touching the code!
+- **Brand name and logo are dynamic**: Change brand name, tagline, announcement banner, and custom brand logo directly in the **Admin Portal** (`/admin` &rarr; Store & Branding Settings).
+- Real-time updates reflect across the storefront navbar, footer, cart drawer, checkout modal, tracking, browser favicon, and page titles.
 
-### 2. Tailored Chocolate Catalog & Storefront (`index.html`)
-- **Rich Categories**: Dark Chocolates (70% - 85%), Creamy Hazelnut & Milk Chocolates, Handcrafted Truffles & Bonbons, Nutty Barks & Clusters, Luxury Gift Hampers, and Sugar-Free/Keto Treats.
-- **Variant & Weight Inventory**: Per-variant stock tracking (`100g`, `250g`, `500g`, `Box of 6`, `Box of 12`, `Box of 24`).
-- **Dietary & Cocoa Badges**: Green vegetarian dot 🟢, Eggless badges, Cocoa percentage indicators, and ingredients disclosure.
-- **Insulated Cold-Box Protection**: Highlights thermal bubble wrapping and ice cooling packs ensuring melt-free delivery across India.
-- **Interactive Cart & Free Delivery Bar**: Dynamic progress tracking toward free cold-box delivery threshold (orders above ₹799).
-- **Personalized Gift Message**: Customers can append custom gift cards ("Happy Birthday!", "With Love").
+### 2. Modern Product Catalog & Storefront (`index.html`)
+- **Product Categories**: Dynamic category pills with custom icons (Chocolates, Barks, Truffles, Snacks & Treats, Gift Boxes).
+- **Clean URLs**: Direct product page links at `/product/:id` with instant scrolling, breadcrumbs, high-res gallery, and variant selectors.
+- **Stock Urgency & Badges**: Real-time stock counters ("Only 1 left!"), dietary badges (🟢 Veg), cocoa percentage, and discount calculations.
+- **Interactive Cart & Free Delivery Progress Bar**: Live progress tracking toward free shipping.
+- **Personalized Gift Note**: Add custom gift messages to orders.
 
-### 3. Comprehensive WhatsApp Integrations
-- **1-Click Direct "Order on WhatsApp"**: Product cards and modal detail pages pre-format instant inquiries with product name, selected weight/variant, and price.
-- **Dedicated WhatsApp Checkout Workflow**: Captures customer name, phone, delivery address, calculates total, saves order in PostgreSQL, and launches WhatsApp with a pre-formatted receipt to the store's official WhatsApp number.
-- **Automated Baileys WhatsApp Engine**: Admin can scan a QR code inside `admin.html` to link their WhatsApp Web session. When orders are placed or order status is updated (Confirmed ➔ Packing in Cold Box ➔ Shipped ➔ Delivered), automated confirmation and tracking messages are dispatched directly to the customer's WhatsApp chat.
+### 3. Reliable PostgreSQL WhatsApp Queueing System
+- **Offline & Disconnection Resilient**: When WhatsApp client is disconnected, messages are stored in PostgreSQL (`messages` table with `sent = false`).
+- **Sequential FIFO Queue Processor**: Background worker sends pending messages with a safe 1.5s delay to prevent rate limits.
+- **Auto Reconnection Dispatch**: Reconnection immediately flushes pending messages in exact chronological order.
+- **Auto-Cleanup**: Successfully sent messages are marked `sent = true` and purged automatically to keep database lean.
+- **Direct WhatsApp Checkout**: Formats orders with clean product links and customer details for 1-click submission.
 
-### 4. Admin Management Portal (`admin.html`)
-- **1-Click Instant Demo Login**: Test admin features immediately without typing passwords, or log in with `admin@chocolux.com` / `admin123`.
-- **Live KPI Analytics Snapshot**: Total revenue (₹), order counts, listed chocolates, and low-stock alerts (< 5 units).
-- **Full Products CRUD**: Add, edit, and delete chocolates with multi-image upload (`multer`), cocoa specifications, description, and custom variants JSON.
-- **Order Fulfillment & Tracking**: Filter by status, inspect customer delivery addresses and gift notes, update status, and initiate direct WhatsApp chats with customers.
-- **Store & Branding Settings**: Live editing of Brand Name, Tagline, WhatsApp ordering number, Support Email, Announcement Bar text, and Free Delivery minimum threshold.
+### 4. Responsive Admin Management Portal (`admin.html`)
+- **Mobile-Responsive Drawer Navigation**: Clean hamburger slide-out drawer on smartphones and tablets, fixed sleek sidebar on desktop.
+- **1-Click Instant Demo Login**: Test admin features immediately or use registered credentials.
+- **Live KPI Analytics Snapshot**: Total revenue (₹), order counts, listed products, and low-stock alerts.
+- **Full Products & Categories CRUD**: Manage products, categories, variants, and image uploads.
+- **WhatsApp Web Management**: QR code scanner for Baileys session pairing, connection status monitor, and queue health inspector.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Node.js & Express.js (Port `3001`)
-- **Database**: PostgreSQL (Neon Serverless PostgreSQL with SSL)
-- **WhatsApp Web Engine**: `@whiskeysockets/baileys` + `qrcode` with persistent DB auth keys
 - **Frontend**: HTML5, Tailwind CSS, Vanilla JavaScript (ES6+), Font: *Playfair Display* & *Inter*
-- **File Uploads**: `multer` storing into `/uploads` with real-time preview
+- **Hosting**: Firebase Hosting (`https://snackztin.web.app`)
+- **Backend**: Node.js & Express.js
+- **Database**: PostgreSQL (Neon Serverless PostgreSQL with SSL)
+- **WhatsApp Web Engine**: `@whiskeysockets/baileys` with persistent PostgreSQL session auth
+- **Backend Cloud**: Render Web Service (`snackztin-backend.onrender.com`)
 
 ---
 
-## 🚀 How to Run
+## 🚀 Deployment
 
-1. Open PowerShell or Terminal and navigate to the project folder:
+### 1. Frontend (Firebase Hosting)
+The frontend is deployed to Firebase Hosting site `snackztin` with clean URLs and SPA rewrites:
+```bash
+firebase deploy --only hosting
+```
+URL: [https://snackztin.web.app](https://snackztin.web.app)
+
+### 2. Backend (Render)
+Click the button below to deploy the backend on Render via Blueprint:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Stephen4123/snackztin)
+
+Or in the [Render Dashboard](https://dashboard.render.com):
+1. Click **New +** &rarr; **Blueprint**.
+2. Connect repository **`Stephen4123/snackztin`**.
+3. Render automatically provisions the web service using [`render.yaml`](render.yaml).
+
+---
+
+## 💻 Local Development
+
+1. Clone repository:
    ```bash
-   cd "C:\Users\user\Downloads\Choco-Shop"
+   git clone https://github.com/Stephen4123/snackztin.git
+   cd snackztin
    ```
 
-2. Seed sample categories, products, and default store settings:
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Seed database:
    ```bash
    npm run seed
    ```
 
-3. Start the server:
+4. Start development server:
    ```bash
    npm start
    ```
 
-4. Open in your browser:
-   - **Customer Storefront**: [http://localhost:3001](http://localhost:3001)
-   - **Admin Portal**: [http://localhost:3001/admin.html](http://localhost:3001/admin.html)
+5. Access locally:
+   - Storefront: `http://localhost:3001`
+   - Admin Portal: `http://localhost:3001/admin`
