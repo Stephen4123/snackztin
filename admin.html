@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
+  <script src="js/config.js"></script>
+  <link id="admin-favicon" rel="icon" type="image/png" href="/uploads/choco-1795357882540-491298133.png">
+  <title id="admin-doc-title">CookLux — Admin Management Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            choco: {
+              50: '#fbf8f5',
+              100: '#f6f0ea',
+              200: '#eddccf',
+              300: '#e0c2ab',
+              400: '#ce9f7a',
+              500: '#b87c51',
+              600: '#9b603d',
+              700: '#7d4a32',
+              800: '#5c3525',
+              900: '#381f16',
+              950: '#1e0e0a'
+            },
+            gold: {
+              400: '#f3c766',
+              500: '#dfa637',
+              600: '#b78022'
+            }
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #ce9f7a; border-radius: 9999px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-choco-50 text-choco-950 min-h-screen flex flex-col antialiased selection:bg-gold-500 selection:text-white">
+
+  <!-- LOGIN OVERLAY (Shows when not authenticated) -->
+  <div id="login-overlay" class="fixed inset-0 z-50 bg-choco-950 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-8 border border-choco-200 shadow-2xl text-center relative animate-in zoom-in-95">
+      <div id="admin-login-logo-container" class="w-16 h-16 rounded-2xl bg-choco-900 text-gold-400 text-3xl font-serif flex items-center justify-center mx-auto mb-4 shadow-md overflow-hidden">
+        <img id="admin-login-logo-img" src="/uploads/choco-1795357882540-491298133.png" alt="Logo" class="w-full h-full object-contain p-1.5">
+        <span id="admin-login-logo-emoji" class="hidden">🍫</span>
+      </div>
+      <h2 id="login-brand-name" class="font-serif text-2xl font-bold text-choco-950">CookLux Admin</h2>
+      <p class="text-xs text-choco-600 mt-1 mb-6">Enter your credentials or click 1-Click Demo Login to manage your store catalog.</p>
+
+      <form id="login-form" class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-bold text-choco-700 uppercase mb-1">Email</label>
+          <input type="email" id="login-email" value="admin@chocolux.com" required
+            class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm focus:outline-none focus:border-choco-900">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-choco-700 uppercase mb-1">Password</label>
+          <input type="password" id="login-password" value="admin123" required
+            class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm focus:outline-none focus:border-choco-900">
+        </div>
+        
+        <button type="submit" class="w-full py-3 rounded-xl bg-choco-950 hover:bg-choco-900 text-white text-sm font-bold shadow-md transition-all">
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-6 pt-6 border-t border-choco-100">
+        <button id="demo-login-btn" class="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-choco-950 text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-2">
+          <span>⚡ 1-Click Instant Demo Login</span>
+        </button>
+        <p class="text-[11px] text-choco-400 mt-2">Bypasses password for instant dashboard inspection.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE SIDEBAR DRAWER OVERLAY & PANEL (Small Devices < md) -->
+  <div id="admin-drawer-container" class="fixed inset-0 z-50 pointer-events-none transition-opacity duration-300 opacity-0 md:hidden">
+    <!-- Backdrop Overlay -->
+    <div id="admin-drawer-backdrop" onclick="closeAdminDrawer()" class="absolute inset-0 bg-choco-950/75 backdrop-blur-xs transition-opacity duration-300"></div>
+
+    <!-- Slide-in Drawer -->
+    <div id="admin-drawer-panel" class="absolute top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-choco-950 text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out -translate-x-full border-r border-choco-800">
+      
+      <!-- Drawer Header -->
+      <div class="p-4 border-b border-choco-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="admin-drawer-logo-container" class="w-9 h-9 rounded-xl bg-choco-900 border border-choco-700 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+            <img id="admin-drawer-logo-img" src="/uploads/choco-1795357882540-491298133.png" alt="Logo" class="w-full h-full object-contain p-1">
+            <span id="admin-drawer-logo-emoji" class="text-xl hidden">🍫</span>
+          </div>
+          <div>
+            <span id="drawer-brand-title" class="font-serif text-base font-bold text-white block leading-tight">CookLux</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-400 border border-gold-400/30">Master Admin</span>
+          </div>
+        </div>
+        <button onclick="closeAdminDrawer()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-choco-200 flex items-center justify-center text-sm font-bold transition-colors" aria-label="Close Drawer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Drawer Navigation Menu -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1.5">
+        <button data-tab="tab-analytics" onclick="selectDrawerTab('tab-analytics')" class="nav-tab active w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-gold-500 text-choco-950 font-extrabold shadow-sm">
+          <span class="text-base">📊</span>
+          <span>Analytics Overview</span>
+        </button>
+        <button data-tab="tab-products" onclick="selectDrawerTab('tab-products')" class="nav-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-choco-900/40 text-choco-200 hover:bg-white/10 hover:text-white">
+          <span class="text-base">📦</span>
+          <span>Products (CRUD)</span>
+        </button>
+        <button data-tab="tab-categories" onclick="selectDrawerTab('tab-categories')" class="nav-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-choco-900/40 text-choco-200 hover:bg-white/10 hover:text-white">
+          <span class="text-base">🏷️</span>
+          <span>Categories</span>
+        </button>
+        <button data-tab="tab-orders" onclick="selectDrawerTab('tab-orders')" class="nav-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-choco-900/40 text-choco-200 hover:bg-white/10 hover:text-white">
+          <span class="text-base">🛒</span>
+          <span>Orders Management</span>
+        </button>
+        <button data-tab="tab-settings" onclick="selectDrawerTab('tab-settings')" class="nav-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-choco-900/40 text-choco-200 hover:bg-white/10 hover:text-white">
+          <span class="text-base">⚙️</span>
+          <span>Store & Branding</span>
+        </button>
+        <button data-tab="tab-whatsapp" onclick="selectDrawerTab('tab-whatsapp')" class="nav-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-left transition-all bg-choco-900/40 text-choco-200 hover:bg-white/10 hover:text-white">
+          <span class="text-base">💬</span>
+          <span>WhatsApp Baileys QR</span>
+        </button>
+      </div>
+
+      <!-- Drawer Footer Actions -->
+      <div class="p-3 border-t border-choco-800 space-y-2 bg-choco-950/80">
+        <a href="/" target="_blank" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-choco-100 text-xs font-bold transition-colors">
+          <span>Storefront Preview ↗</span>
+        </a>
+        <button onclick="handleLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-colors">
+          Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD CONTAINER -->
+  <div id="admin-app" class="flex-1 flex flex-col min-h-screen">
+    
+    <!-- TOP NAVBAR -->
+    <header class="bg-choco-950 text-white border-b border-choco-800 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <!-- Mobile Drawer Hamburger Toggle Button -->
+          <button id="mobile-drawer-toggle" onclick="openAdminDrawer()" class="md:hidden p-2 -ml-1 text-white hover:bg-white/10 rounded-xl flex items-center justify-center transition-colors" aria-label="Open Navigation Drawer">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+
+          <div id="admin-header-logo-container" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-choco-900 border border-choco-800 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+            <img id="admin-header-logo-img" src="/uploads/choco-1795357882540-491298133.png" alt="Logo" class="w-full h-full object-contain p-1">
+            <span id="admin-header-logo-emoji" class="text-xl sm:text-2xl hidden">🍫</span>
+          </div>
+          <div class="truncate">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <span id="header-brand-title" class="font-serif text-base sm:text-xl font-bold tracking-tight text-white truncate">CookLux</span>
+              <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-400 border border-gold-400/30 shrink-0">Admin</span>
+            </div>
+            <p class="text-[10px] sm:text-[11px] text-choco-300 hidden sm:block truncate">Live PostgreSQL Storefront & WhatsApp Hub</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <a href="/" target="_blank" class="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-choco-200 flex items-center gap-1 transition-colors">
+            <span>Storefront</span>
+            <span class="text-[10px]">↗</span>
+          </a>
+          <button id="logout-btn" class="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors">
+            Log Out
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN BODY WITH SIDEBAR TABS -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 flex-1 w-full grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8">
+      
+      <!-- DESKTOP SIDEBAR NAVIGATION (Hidden on mobile, visible on md+) -->
+      <aside id="admin-desktop-sidebar" class="hidden md:block md:col-span-1 space-y-1.5">
+        <button data-tab="tab-analytics" class="nav-tab active w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-choco-950 text-white shadow-xs">
+          <span>📊</span>
+          <span>Analytics Overview</span>
+        </button>
+        <button data-tab="tab-products" class="nav-tab w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-white text-choco-800 hover:bg-choco-100">
+          <span>📦</span>
+          <span>Products (CRUD)</span>
+        </button>
+        <button data-tab="tab-categories" class="nav-tab w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-white text-choco-800 hover:bg-choco-100">
+          <span>🏷️</span>
+          <span>Categories</span>
+        </button>
+        <button data-tab="tab-orders" class="nav-tab w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-white text-choco-800 hover:bg-choco-100">
+          <span>🛒</span>
+          <span>Orders Management</span>
+        </button>
+        <button data-tab="tab-settings" class="nav-tab w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-white text-choco-800 hover:bg-choco-100">
+          <span>⚙️</span>
+          <span>Store & Branding</span>
+        </button>
+        <button data-tab="tab-whatsapp" class="nav-tab w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-left transition-all bg-white text-choco-800 hover:bg-choco-100">
+          <span>💬</span>
+          <span>WhatsApp Baileys QR</span>
+        </button>
+      </aside>
+
+      <!-- TAB CONTENTS -->
+      <main class="col-span-1 md:col-span-4 min-w-0">
+        
+        <!-- ============================================== -->
+        <!-- TAB 1: ANALYTICS OVERVIEW -->
+        <!-- ============================================== -->
+        <section id="tab-analytics" class="tab-pane space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="font-serif text-2xl font-bold text-choco-950">Analytics Snapshot</h2>
+            <button onclick="loadAdminStats()" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-choco-200 hover:border-choco-900 text-choco-700">
+              Refresh 🔄
+            </button>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-choco-200 shadow-xs">
+              <span class="text-[10px] sm:text-xs font-bold text-choco-500 uppercase tracking-wider">Total Sales</span>
+              <h3 id="stat-revenue" class="text-xl sm:text-2xl font-serif font-bold text-choco-950 mt-1">₹0</h3>
+              <p class="text-[10px] sm:text-[11px] text-emerald-600 mt-1">Live from PostgreSQL</p>
+            </div>
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-choco-200 shadow-xs">
+              <span class="text-[10px] sm:text-xs font-bold text-choco-500 uppercase tracking-wider">Total Orders</span>
+              <h3 id="stat-orders" class="text-xl sm:text-2xl font-serif font-bold text-choco-950 mt-1">0</h3>
+              <p class="text-[10px] sm:text-[11px] text-choco-500 mt-1">Direct & WhatsApp orders</p>
+            </div>
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-choco-200 shadow-xs">
+              <span class="text-[10px] sm:text-xs font-bold text-choco-500 uppercase tracking-wider">Active Products</span>
+              <h3 id="stat-products" class="text-xl sm:text-2xl font-serif font-bold text-choco-950 mt-1">0</h3>
+              <p class="text-[10px] sm:text-[11px] text-choco-500 mt-1">Listed products</p>
+            </div>
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-choco-200 shadow-xs">
+              <span class="text-[10px] sm:text-xs font-bold text-choco-500 uppercase tracking-wider">Low Stock</span>
+              <h3 id="stat-low-stock" class="text-xl sm:text-2xl font-serif font-bold text-amber-600 mt-1">0</h3>
+              <p class="text-[10px] sm:text-[11px] text-amber-700 mt-1">&lt; 5 units remaining</p>
+            </div>
+          </div>
+
+          <!-- Recent Orders Feed -->
+          <div class="bg-white rounded-3xl border border-choco-200 p-6 shadow-xs">
+            <h3 class="font-serif text-lg font-bold text-choco-950 mb-4">Recent Inbound Orders</h3>
+            <div id="recent-orders-list" class="divide-y divide-choco-100 text-xs">
+              <p class="text-choco-400 py-4 text-center">No orders recorded yet.</p>
+            </div>
+          </div>
+        </section>
+
+
+        
+
+        <!-- ============================================== -->
+        <!-- TAB 2: PRODUCTS CRUD -->
+        <!-- ============================================== -->
+        <section id="tab-products" class="tab-pane hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="font-serif text-2xl font-bold text-choco-950">Products Inventory</h2>
+              <p class="text-xs text-choco-600 mt-0.5">Manage pricing, specifications, sizes/weights, and stock.</p>
+            </div>
+            <button onclick="openProductEditModal()" class="px-5 py-2.5 rounded-2xl bg-choco-950 hover:bg-choco-900 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
+              <span>+ Add New Product</span>
+              <span>📦</span>
+            </button>
+          </div>
+
+          <!-- Filter & Search Bar -->
+          <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+            <input type="text" id="admin-prod-search" placeholder="Search by title or category..."
+              class="flex-1 px-4 py-2.5 bg-white border border-choco-200 rounded-xl text-xs focus:outline-none focus:border-choco-900">
+            <select id="admin-prod-cat-filter" class="px-3 py-2.5 bg-white border border-choco-200 rounded-xl text-xs font-medium focus:outline-none">
+              <option value="All">All Categories</option>
+            </select>
+          </div>
+
+          <!-- Products Table -->
+          <div class="bg-white rounded-3xl border border-choco-200 overflow-hidden shadow-xs">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs min-w-[620px]">
+                <thead class="bg-choco-100/70 text-choco-700 uppercase font-bold tracking-wider border-b border-choco-200">
+                  <tr>
+                    <th class="p-4">Product</th>
+                    <th class="p-4">Category</th>
+                    <th class="p-4">Selling Price</th>
+                    <th class="p-4">Variants & Stock</th>
+                    <th class="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-products-table-body" class="divide-y divide-choco-100">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ============================================== -->
+        <section id="tab-categories" class="tab-pane hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="font-serif text-2xl font-bold text-choco-950">Categories Management</h2>
+              <p class="text-xs text-choco-600 mt-0.5">Add, customize, and manage product categories & collections.</p>
+            </div>
+            <button onclick="document.getElementById('new-cat-name').focus()" class="px-5 py-2.5 rounded-2xl bg-choco-950 hover:bg-choco-900 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2">
+              <span>+ Add New Category</span>
+              <span>🏷️</span>
+            </button>
+          </div>
+
+          <!-- Add Category Form Card -->
+          <div class="bg-white rounded-3xl border border-choco-200 p-4 sm:p-6 shadow-xs">
+            <h3 class="font-serif text-sm font-bold text-choco-950 mb-3">Create Category</h3>
+            <form id="add-category-form" onsubmit="handleCreateCategory(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-end">
+              <div>
+                <label class="block text-xs font-bold text-choco-800 uppercase mb-1">Category Name *</label>
+                <input type="text" id="new-cat-name" required placeholder="e.g. Artisanal Barks"
+                  class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-xs focus:outline-none focus:border-choco-900">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-choco-800 uppercase mb-1">Icon / Emoji</label>
+                <input type="text" id="new-cat-icon" placeholder="🍫" value="🍫"
+                  class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-xs text-center focus:outline-none focus:border-choco-900">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-choco-800 uppercase mb-1">Subcategories (comma separated)</label>
+                <input type="text" id="new-cat-subcats" placeholder="e.g. Dark, Nutty, Berries"
+                  class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-xs focus:outline-none focus:border-choco-900">
+              </div>
+              <div>
+                <button type="submit" id="create-cat-btn" class="w-full py-2.5 rounded-xl bg-choco-950 hover:bg-choco-900 text-white text-xs font-bold transition-all shadow-md">
+                  Add Category ➕
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Categories List Table -->
+          <div class="bg-white rounded-3xl border border-choco-200 overflow-hidden shadow-xs">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs min-w-[500px]">
+                <thead class="bg-choco-100/70 text-choco-700 uppercase font-bold tracking-wider border-b border-choco-200">
+                  <tr>
+                    <th class="p-4">Icon</th>
+                    <th class="p-4">Category Name</th>
+                    <th class="p-4">Subcategories</th>
+                    <th class="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-categories-table-body" class="divide-y divide-choco-100">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: ORDERS MANAGEMENT -->
+        <!-- ============================================== -->
+        <section id="tab-orders" class="tab-pane hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="font-serif text-2xl font-bold text-choco-950">Orders Management</h2>
+              <p class="text-xs text-choco-600 mt-0.5">Track fulfillment, update status, and message customers via WhatsApp.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="order-status-filter" class="px-3 py-2 bg-white border border-choco-200 rounded-xl text-xs font-semibold">
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Packing in Cold Box">Packing in Cold Box</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <button onclick="loadAdminOrders()" class="px-3 py-2 bg-white border border-choco-200 rounded-xl text-xs font-bold hover:border-choco-900">
+                Refresh 🔄
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-choco-200 overflow-hidden shadow-xs">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs min-w-[720px]">
+                <thead class="bg-choco-100/70 text-choco-700 uppercase font-bold tracking-wider border-b border-choco-200">
+                  <tr>
+                    <th class="p-4">Order ID</th>
+                    <th class="p-4">Customer</th>
+                    <th class="p-4">Items</th>
+                    <th class="p-4">Total</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-orders-table-body" class="divide-y divide-choco-100">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        
+
+        <!-- ============================================== -->
+        <!-- TAB 4: STORE & BRANDING SETTINGS (DYNAMIC NAME EDITING) -->
+        <!-- ============================================== -->
+        <section id="tab-settings" class="tab-pane hidden space-y-6">
+          <div>
+            <h2 class="font-serif text-2xl font-bold text-choco-950">Store & Branding Settings</h2>
+            <p class="text-xs text-choco-600 mt-0.5">Everything here updates dynamically across the entire website and WhatsApp messages.</p>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-choco-200 p-6 sm:p-8 max-w-3xl shadow-xs">
+            <form id="store-settings-form" class="space-y-5 text-xs">
+              
+              <!-- Store Brand Logo -->
+              <div class="p-4 rounded-2xl bg-choco-50 border border-choco-200">
+                <label class="block font-bold text-choco-800 uppercase mb-2">Store Brand Logo</label>
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                  <div id="admin-logo-preview-box" class="w-16 h-16 rounded-2xl bg-choco-900 border border-choco-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative">
+                    <img id="admin-logo-preview-img" src="" alt="Brand Logo" class="w-full h-full object-contain hidden p-1">
+                    <span id="admin-logo-preview-placeholder" class="text-3xl">🍫</span>
+                  </div>
+                  <div class="flex-1 w-full space-y-2">
+                    <div class="flex gap-2">
+                      <input type="file" id="admin-logo-file" accept="image/*" onchange="handleAdminLogoUpload(this)"
+                        class="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-choco-950 file:text-white file:text-xs">
+                      <button type="button" onclick="removeAdminLogo()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200">
+                        Remove
+                      </button>
+                    </div>
+                    <input type="text" id="setting-logo-url" placeholder="Or enter direct Logo Image URL..."
+                      oninput="updateAdminLogoPreview(this.value)"
+                      class="w-full px-3 py-1.5 bg-white border border-choco-200 rounded-xl text-xs focus:outline-none focus:border-choco-900">
+                  </div>
+                </div>
+                <p class="text-[11px] text-choco-500 mt-2">Upload PNG/JPG or paste SVG/image URL. Replaces the default emoji icon in the public navbar.</p>
+              </div>
+
+              <!-- Brand Name & Slogan -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Brand Name *</label>
+                  <input type="text" id="setting-brand-name" required value="CookLux"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm font-bold text-choco-950 focus:outline-none focus:border-choco-900">
+                  <p class="text-[11px] text-choco-500 mt-1">Instantly renames the entire store, navbar, footer, and invoices.</p>
+                </div>
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Tagline / Slogan</label>
+                  <input type="text" id="setting-tagline" value="" placeholder="Optional brand slogan"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl text-sm focus:outline-none focus:border-choco-900">
+                </div>
+              </div>
+
+              <!-- WhatsApp Business Number -->
+              <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <label class="block font-bold text-emerald-900 uppercase mb-1">WhatsApp Business Ordering Number *</label>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">💬</span>
+                  <input type="text" id="setting-whatsapp-phone" required value="918078864233"
+                    class="w-full px-4 py-2 bg-white border border-emerald-300 rounded-xl font-mono font-bold text-emerald-950 focus:outline-none focus:border-emerald-700">
+                </div>
+                <p class="text-[11px] text-emerald-800 mt-1.5">All customer orders and single-item purchase clicks will redirect directly to this WhatsApp number.</p>
+              </div>
+
+              <!-- Contacts -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Support Email</label>
+                  <input type="email" id="setting-email" value="orders@chocolux.com"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+                </div>
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Helpline Phone</label>
+                  <input type="text" id="setting-phone" value="+91 80788 64233"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+                </div>
+              </div>
+
+              <!-- Announcement Banner -->
+              <div>
+                <label class="block font-bold text-choco-800 uppercase mb-1">Top Announcement Bar Text</label>
+                <input type="text" id="setting-announcement" value="🍫 Free Insulated Cold-Box Delivery on orders above ₹799 | 100% Pure Cocoa Butter"
+                  class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+              </div>
+
+              <!-- Shipping Rates -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Free Delivery Minimum (₹)</label>
+                  <input type="number" id="setting-min-free" value="799"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+                </div>
+                <div>
+                  <label class="block font-bold text-choco-800 uppercase mb-1">Standard Delivery Fee (₹)</label>
+                  <input type="number" id="setting-delivery-fee" value="60"
+                    class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+                </div>
+              </div>
+
+              <!-- Save Button -->
+              <div class="pt-4 border-t border-choco-100 flex items-center justify-between">
+                <span id="settings-status-msg" class="text-xs font-semibold text-emerald-700"></span>
+                <button type="submit" id="save-settings-btn" class="px-6 py-3 rounded-xl bg-choco-950 hover:bg-choco-900 text-white font-bold text-xs shadow-md transition-all">
+                  Save All Changes 💾
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+
+        
+
+        <!-- ============================================== -->
+        <!-- TAB 5: WHATSAPP BAILEYS QR INTEGRATION -->
+        <!-- ============================================== -->
+        <section id="tab-whatsapp" class="tab-pane hidden space-y-6">
+          <div>
+            <h2 class="font-serif text-2xl font-bold text-choco-950">WhatsApp Baileys Web Integration</h2>
+            <p class="text-xs text-choco-600 mt-0.5">Link your WhatsApp Web session to send automated order confirmations & status updates to customers.</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- QR Card -->
+            <div class="bg-white rounded-3xl border border-choco-200 p-4 sm:p-6 text-center shadow-xs">
+              <h3 class="font-serif text-base font-bold text-choco-950 mb-2">WhatsApp Device Link</h3>
+              
+              <div id="wa-status-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 mb-4">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                <span>Connecting / Waiting for QR...</span>
+              </div>
+
+              <!-- QR Container -->
+              <div id="wa-qr-box" class="w-56 h-56 sm:w-64 sm:h-64 mx-auto bg-choco-50 border-2 border-dashed border-choco-200 rounded-2xl flex items-center justify-center p-2 mb-4 overflow-hidden">
+                <p class="text-xs text-choco-400">Loading QR Code...</p>
+              </div>
+
+              <p class="text-[11px] text-choco-500 max-w-xs mx-auto leading-relaxed">
+                Open WhatsApp on your mobile phone &rarr; Tap <b>Linked Devices</b> &rarr; <b>Link a Device</b> &rarr; Point camera at this QR code.
+              </p>
+
+              <div class="mt-4 pt-4 border-t border-choco-100 flex flex-wrap justify-center gap-3">
+                <button onclick="restartWhatsApp()" class="px-4 py-2 bg-choco-100 hover:bg-choco-200 text-choco-900 text-xs font-bold rounded-xl transition-colors">
+                  Refresh QR 🔄
+                </button>
+                <button onclick="disconnectWhatsApp()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-colors">
+                  Logout Device 🔌
+                </button>
+              </div>
+
+              <!-- Message Queue Indicator -->
+              <div class="mt-4 p-3 rounded-2xl bg-choco-50 border border-choco-200 text-left flex items-center justify-between text-xs">
+                <div>
+                  <span class="font-bold text-choco-900 block flex items-center gap-1.5">
+                    <span>📬</span>
+                    <span>Offline Message Queue</span>
+                  </span>
+                  <span id="wa-queue-status-text" class="text-choco-600 text-[11px]">0 pending messages (auto-retry active)</span>
+                </div>
+                <button type="button" onclick="loadWhatsAppQueueStatus()" class="px-2.5 py-1.5 bg-white border border-choco-200 hover:border-choco-900 rounded-lg text-[11px] font-bold text-choco-800 shadow-xs">
+                  Check Queue 🔄
+                </button>
+              </div>
+            </div>
+
+            <!-- Test Message Card -->
+            <div class="bg-white rounded-3xl border border-choco-200 p-4 sm:p-6 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 class="font-serif text-base font-bold text-choco-950 mb-1">Send Test Message</h3>
+                <p class="text-xs text-choco-600 mb-4">Verify that your WhatsApp connection can dispatch messages properly, or queue them safely if disconnected.</p>
+
+                <form id="wa-test-form" class="space-y-3 text-xs">
+                  <div>
+                    <label class="block font-bold text-choco-800 uppercase mb-1">Recipient Phone Number *</label>
+                    <input type="text" id="wa-test-phone" placeholder="e.g. 919876543210" required
+                      class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-choco-800 uppercase mb-1">Message Content</label>
+                    <textarea id="wa-test-msg" rows="3" class="w-full px-4 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">🍫 Greetings from your store! This is a test WhatsApp message from your Admin Portal.</textarea>
+                  </div>
+                  <button type="submit" id="wa-test-submit-btn" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-md">
+                    Send WhatsApp Test Message ✉️
+                  </button>
+                </form>
+              </div>
+
+              <div class="mt-4 p-3 rounded-2xl bg-choco-50 border border-choco-100 text-[11px] text-choco-600">
+                💡 <b>How it works:</b> All WhatsApp notifications pass through a reliable database queue (`messages` table). When connected, messages are dispatched sequentially. If disconnected, messages remain queued and auto-deliver upon reconnection!
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  <div id="product-modal-dialog" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-4 sm:p-8 border border-choco-200 shadow-2xl relative">
+      <button onclick="closeProductEditModal()" class="absolute top-5 right-5 text-choco-600 hover:text-choco-950 font-bold">✕</button>
+      
+      <h3 id="prod-modal-heading" class="font-serif text-xl font-bold text-choco-950 mb-1">Add New Product</h3>
+      <p class="text-xs text-choco-600 mb-6">Create or update product specifications and variants.</p>
+
+      <form id="product-form" class="space-y-4 text-xs">
+        <input type="hidden" id="edit-prod-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-choco-800 uppercase mb-1">Product Title *</label>
+            <input type="text" id="edit-prod-title" required placeholder="e.g. Silk Nighty / Dark Chocolate Bar"
+              class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+          </div>
+          <div>
+            <label class="block font-bold text-choco-800 uppercase mb-1">Category *</label>
+            <select id="edit-prod-category" required class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+              <option value="Dark Chocolates">Dark Chocolates</option>
+              <option value="Milk & Creamy Chocolates">Milk & Creamy Chocolates</option>
+              <option value="Handcrafted Truffles & Bonbons">Handcrafted Truffles & Bonbons</option>
+              <option value="Nutty Barks & Clusters">Nutty Barks & Clusters</option>
+              <option value="Luxury Gift Boxes & Hampers">Luxury Gift Boxes & Hampers</option>
+              <option value="Sugar-Free & Keto Treats">Sugar-Free & Keto Treats</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block font-bold text-choco-800 uppercase mb-1">Selling Price (₹) *</label>
+            <input type="number" id="edit-prod-price" required placeholder="e.g. 599"
+              class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+          </div>
+          <div>
+            <label class="block font-bold text-choco-800 uppercase mb-1">MRP Price (₹)</label>
+            <input type="number" id="edit-prod-mrp" placeholder="e.g. 749"
+              class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+          </div>
+          <div>
+            <label class="block font-bold text-choco-800 uppercase mb-1">Specification / Material Detail</label>
+            <input type="text" id="edit-prod-cocoa" placeholder="e.g. 100% Pure Cotton / 70% Pure Cocoa"
+              class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-choco-800 uppercase mb-1">Description</label>
+          <textarea id="edit-prod-desc" rows="2" placeholder="Sensory notes, texture, pairings..."
+            class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-choco-800 uppercase mb-1">Ingredients & Allergens</label>
+          <input type="text" id="edit-prod-ingredients" placeholder="Pure Cocoa Butter, Raw Cane Sugar, Dairy Cream, Nuts..."
+            class="w-full px-3.5 py-2.5 bg-choco-50 border border-choco-200 rounded-xl focus:outline-none focus:border-choco-900">
+        </div>
+
+        <!-- Image Upload or URL with Instant Live Preview -->
+        <div class="p-4 rounded-2xl bg-choco-50 border border-choco-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-choco-800 uppercase">Product Image (Upload or URL)</label>
+            <button type="button" onclick="clearProductModalImage()" id="clear-img-btn" class="text-[11px] text-rose-600 hover:text-rose-800 font-bold hidden">Clear Image ✕</button>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="file" id="edit-prod-file" accept="image/*" onchange="previewProductImageFile(this)" class="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-choco-950 file:text-white file:text-xs">
+            <span class="text-choco-400 self-center hidden sm:inline">or</span>
+            <input type="text" id="edit-prod-img-url" placeholder="Paste image URL..." oninput="previewProductImageUrl(this.value)"
+              class="flex-1 px-3 py-1.5 bg-white border border-choco-200 rounded-xl focus:outline-none text-xs">
+          </div>
+          <div id="img-preview-box" class="flex items-center gap-3.5 hidden pt-1">
+            <div class="w-20 h-20 rounded-2xl bg-choco-200 overflow-hidden border border-choco-300 shadow-xs shrink-0">
+              <img id="img-preview" src="" alt="Product Preview" class="w-full h-full object-cover">
+            </div>
+            <div class="text-[11px] text-choco-600">
+              <span class="font-bold text-emerald-800 block flex items-center gap-1">
+                <span>✅</span>
+                <span>Image Preview Active</span>
+              </span>
+              <span class="text-choco-500">Live preview of the image that will appear on storefront cards and product detail view.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Variants & Inventory Stock (User-Friendly / No JSON) -->
+        <div class="p-4 rounded-2xl bg-choco-50/80 border border-choco-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="block font-bold text-choco-900 uppercase text-xs">Pack Sizes & Stock Inventory</label>
+              <p class="text-[11px] text-choco-600">Add pack sizes, weights, or boxes with available inventory (no JSON required).</p>
+            </div>
+            <button type="button" onclick="addVariantRow('', 20)" class="px-3 py-1.5 rounded-xl bg-choco-950 hover:bg-choco-900 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+              <span>+ Add Pack Size</span>
+            </button>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1">
+            <span class="text-[10px] font-bold text-choco-500 uppercase tracking-wider">Quick Presets:</span>
+            <button type="button" onclick="applyVariantPreset('weights')" class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white border border-choco-200 hover:border-choco-900 text-choco-700">100g / 250g / 500g</button>
+            <button type="button" onclick="applyVariantPreset('boxes')" class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white border border-choco-200 hover:border-choco-900 text-choco-700">Box of 6 / 12 / 24</button>
+            <button type="button" onclick="applyVariantPreset('pouches')" class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white border border-choco-200 hover:border-choco-900 text-choco-700">200g Pouch / 400g Tin</button>
+            <button type="button" onclick="applyVariantPreset('single')" class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white border border-choco-200 hover:border-choco-900 text-choco-700">Standard (25)</button>
+          </div>
+
+          <!-- Rows Container -->
+          <div id="variants-rows-container" class="space-y-2 pt-1 max-h-48 overflow-y-auto custom-scrollbar">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Badges Checkboxes -->
+        <div class="flex items-center gap-6 pt-2">
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="edit-prod-featured" class="w-4 h-4 rounded text-choco-950 focus:ring-0">
+            <span class="font-bold text-choco-800">Featured</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="edit-prod-bestseller" class="w-4 h-4 rounded text-choco-950 focus:ring-0">
+            <span class="font-bold text-choco-800">Best Seller ⭐</span>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-choco-100 flex justify-end gap-3">
+          <button type="button" onclick="closeProductEditModal()" class="px-5 py-2.5 rounded-xl bg-choco-100 text-choco-800 font-bold">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-choco-950 hover:bg-choco-900 text-white font-bold shadow-md">
+            Save Product 💾
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ORDER DETAILS MODAL -->
+  <div id="order-details-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-8 border border-choco-200 shadow-2xl relative">
+      <button onclick="closeOrderDetailsModal()" class="absolute top-5 right-5 text-choco-600 font-bold">✕</button>
+      
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-2xl">📦</span>
+        <div>
+          <h3 id="det-order-num" class="font-serif text-lg font-bold text-choco-950">#CHOC-000000</h3>
+          <span id="det-order-status" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Confirmed</span>
+        </div>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="p-3 rounded-2xl bg-choco-50 border border-choco-100">
+          <span class="font-bold text-choco-800 block mb-1">Customer Delivery Details:</span>
+          <p id="det-cust-name" class="font-bold text-choco-950">Rahul Sharma</p>
+          <p id="det-cust-phone" class="text-choco-600">+91 9876543210</p>
+          <p id="det-cust-address" class="text-choco-600 mt-1">Address details</p>
+        </div>
+
+        <div id="det-gift-note-box" class="p-3 rounded-2xl bg-amber-50 border border-amber-200 hidden">
+          <span class="font-bold text-amber-900 block mb-0.5">🎁 Gift Card Message:</span>
+          <p id="det-gift-message" class="text-amber-950 italic">"Happy Birthday!"</p>
+        </div>
+
+        <div>
+          <span class="font-bold text-choco-800 block mb-2">Products / Items Ordered:</span>
+          <div id="det-items-list" class="space-y-2"></div>
+        </div>
+
+        <div class="pt-3 border-t border-choco-100 flex justify-between text-sm font-bold text-choco-950">
+          <span>Total Amount:</span>
+          <span id="det-total">₹0</span>
+        </div>
+
+        <div class="pt-2">
+          <button id="det-whatsapp-chat-btn" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2">
+            <span>Message Customer on WhatsApp</span>
+            <span>💬</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN JAVASCRIPT LOGIC -->
+  <script>
+    let currentAdminUser = null;
+    let adminProducts = [];
+    let adminOrders = [];
+    let activeDetailOrder = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      bindTabs();
+      bindForms();
+      await loadStoreSettings();
+      await checkAuth();
+    });
+
+    // Global Admin Authenticated API Request Helper
+    async function adminFetch(endpoint, options = {}) {
+      const url = apiUrl(endpoint);
+      const token = localStorage.getItem('chocolux_admin_token');
+      const headers = new Headers(options.headers || {});
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include'
+      });
+    }
+
+    // 1. Auth Handling
+    async function checkAuth() {
+      try {
+        const res = await adminFetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.user) {
+            currentAdminUser = data.user;
+            document.getElementById('login-overlay').classList.add('hidden');
+            initializeDashboard();
+            return;
+          }
+        }
+      } catch (_) {}
+      document.getElementById('login-overlay').classList.remove('hidden');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const res = await adminFetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (data.token) {
+            localStorage.setItem('chocolux_admin_token', data.token);
+          }
+          currentAdminUser = data.user;
+          document.getElementById('login-overlay').classList.add('hidden');
+          initializeDashboard();
+        } else {
+          alert(data.error || 'Login failed');
+        }
+      } catch (err) {
+        alert('Could not complete login');
+      }
+    }
+
+    async function handleDemoLogin() {
+      try {
+        const res = await adminFetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isDemo: true })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (data.token) {
+            localStorage.setItem('chocolux_admin_token', data.token);
+          }
+          currentAdminUser = data.user;
+          document.getElementById('login-overlay').classList.add('hidden');
+          initializeDashboard();
+        }
+      } catch (_) {}
+    }
+
+    async function handleLogout() {
+      localStorage.removeItem('chocolux_admin_token');
+      try {
+        await adminFetch('/api/auth/logout', { method: 'POST' });
+      } catch (_) {}
+      window.location.reload();
+    }
+
+    // 2. Initialize Dashboard
+    async function initializeDashboard() {
+      await loadStoreSettings();
+      await loadAdminCategories();
+      await loadAdminStats();
+      await loadAdminProducts();
+      await loadAdminOrders();
+      pollWhatsAppStatus();
+    }
+
+    // 3. Store Settings (Dynamic Brand Name & Logo Editing)
+    async function loadStoreSettings() {
+      try {
+        const res = await adminFetch('/api/settings');
+        if (res.ok) {
+          const s = await res.json();
+          const brandName = s.brandName || s.brand_name || 'CookLux';
+          
+          document.getElementById('header-brand-title').innerText = brandName;
+          const drawerBrand = document.getElementById('drawer-brand-title');
+          if (drawerBrand) drawerBrand.innerText = brandName;
+          document.getElementById('admin-doc-title').innerText = `${brandName} — Admin Management Portal`;
+          document.getElementById('login-brand-name').innerText = `${brandName} Admin`;
+          
+          document.getElementById('setting-brand-name').value = brandName;
+          document.getElementById('setting-tagline').value = s.tagline || '';
+          document.getElementById('setting-whatsapp-phone').value = s.whatsappNumber || s.whatsapp_number || '';
+          document.getElementById('setting-email').value = s.contactEmail || '';
+          document.getElementById('setting-phone').value = s.contactPhone || '';
+          document.getElementById('setting-announcement').value = s.announcementText || s.announcement_text || '';
+          document.getElementById('setting-min-free').value = s.minFreeShipping || 799;
+          document.getElementById('setting-delivery-fee').value = s.deliveryCharge || 60;
+
+          const logo = s.logoUrl || s.logo_url || '';
+          document.getElementById('setting-logo-url').value = logo;
+          updateAdminGlobalLogo(logo);
+        }
+      } catch (err) {
+        console.error('Error loading settings:', err);
+      }
+    }
+
+    function updateAdminGlobalLogo(url) {
+      const cleanUrl = (url || '').trim();
+      const formattedUrl = formatMediaUrl(cleanUrl);
+      updateAdminLogoPreview(cleanUrl);
+
+      // Top navbar logo
+      const navImg = document.getElementById('admin-header-logo-img');
+      const navEmoji = document.getElementById('admin-header-logo-emoji');
+      if (navImg && navEmoji) {
+        if (formattedUrl) {
+          navImg.src = formattedUrl;
+          navImg.classList.remove('hidden');
+          navEmoji.classList.add('hidden');
+        } else {
+          navImg.classList.add('hidden');
+          navEmoji.classList.remove('hidden');
+        }
+      }
+
+      // Drawer logo
+      const drawerImg = document.getElementById('admin-drawer-logo-img');
+      const drawerEmoji = document.getElementById('admin-drawer-logo-emoji');
+      if (drawerImg && drawerEmoji) {
+        if (formattedUrl) {
+          drawerImg.src = formattedUrl;
+          drawerImg.classList.remove('hidden');
+          drawerEmoji.classList.add('hidden');
+        } else {
+          drawerImg.classList.add('hidden');
+          drawerEmoji.classList.remove('hidden');
+        }
+      }
+
+      // Login screen logo
+      const loginImg = document.getElementById('admin-login-logo-img');
+      const loginEmoji = document.getElementById('admin-login-logo-emoji');
+      if (loginImg && loginEmoji) {
+        if (formattedUrl) {
+          loginImg.src = formattedUrl;
+          loginImg.classList.remove('hidden');
+          loginEmoji.classList.add('hidden');
+        } else {
+          loginImg.classList.add('hidden');
+          loginEmoji.classList.remove('hidden');
+        }
+      }
+
+      // Favicon
+      const fav = document.getElementById('admin-favicon');
+      if (fav && formattedUrl) {
+        fav.href = formattedUrl;
+      }
+    }
+
+    function updateAdminLogoPreview(url) {
+      const img = document.getElementById('admin-logo-preview-img');
+      const placeholder = document.getElementById('admin-logo-preview-placeholder');
+      const formattedUrl = formatMediaUrl((url || '').trim());
+      if (formattedUrl) {
+        img.src = formattedUrl;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    async function handleAdminLogoUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('images', file);
+
+      try {
+        const res = await adminFetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data && data.url) {
+          document.getElementById('setting-logo-url').value = data.url;
+          updateAdminGlobalLogo(data.url);
+        } else {
+          alert('Logo upload failed');
+        }
+      } catch (err) {
+        alert('Error uploading logo image');
+      }
+    }
+
+    function removeAdminLogo() {
+      document.getElementById('setting-logo-url').value = '';
+      const fileInput = document.getElementById('admin-logo-file');
+      if (fileInput) fileInput.value = '';
+      updateAdminGlobalLogo('');
+    }
+
+    async function handleSaveSettings(e) {
+      e.preventDefault();
+      const statusMsg = document.getElementById('settings-status-msg');
+      const saveBtn = document.getElementById('save-settings-btn');
+      saveBtn.innerText = 'Saving...';
+
+      const payload = {
+        brandName: document.getElementById('setting-brand-name').value.trim(),
+        tagline: document.getElementById('setting-tagline').value.trim(),
+        logoUrl: document.getElementById('setting-logo-url').value.trim(),
+        whatsappNumber: document.getElementById('setting-whatsapp-phone').value.trim(),
+        contactEmail: document.getElementById('setting-email').value.trim(),
+        contactPhone: document.getElementById('setting-phone').value.trim(),
+        announcementText: document.getElementById('setting-announcement').value.trim(),
+        minFreeShipping: Number(document.getElementById('setting-min-free').value) || 799,
+        deliveryCharge: Number(document.getElementById('setting-delivery-fee').value) || 60
+      };
+
+      try {
+        const res = await adminFetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          statusMsg.innerText = '✅ Saved successfully to PostgreSQL!';
+          document.getElementById('header-brand-title').innerText = payload.brandName;
+          const drawerBrand = document.getElementById('drawer-brand-title');
+          if (drawerBrand) drawerBrand.innerText = payload.brandName;
+          document.getElementById('admin-doc-title').innerText = `${payload.brandName} — Admin Management Portal`;
+          updateAdminGlobalLogo(payload.logoUrl);
+          setTimeout(() => { statusMsg.innerText = ''; }, 3000);
+        } else {
+          statusMsg.innerText = '❌ Failed to save settings';
+        }
+      } catch (err) {
+        statusMsg.innerText = '❌ Network error';
+      } finally {
+        saveBtn.innerText = 'Save All Changes 💾';
+      }
+    }
+
+    // 4. Analytics Stats
+    async function loadAdminStats() {
+      try {
+        const res = await adminFetch('/api/admin/stats');
+        if (res.ok) {
+          const stats = await res.json();
+          document.getElementById('stat-revenue').innerText = `₹${stats.revenue.toLocaleString('en-IN')}`;
+          document.getElementById('stat-orders').innerText = stats.totalOrders;
+          document.getElementById('stat-products').innerText = stats.totalProducts;
+          document.getElementById('stat-low-stock').innerText = stats.lowStockCount;
+
+          // Render Recent Orders
+          const list = document.getElementById('recent-orders-list');
+          if (!stats.recentOrders || stats.recentOrders.length === 0) {
+            list.innerHTML = '<p class="text-choco-400 py-4 text-center">No orders recorded yet.</p>';
+            return;
+          }
+          list.innerHTML = stats.recentOrders.map(o => `
+            <div class="py-3 flex items-center justify-between">
+              <div>
+                <span class="font-bold text-choco-950 block">#${o.order_number}</span>
+                <span class="text-choco-500">${o.customer?.name || 'Customer'} • ₹${o.total_amount}</span>
+              </div>
+              <span class="font-bold px-2.5 py-0.5 rounded-full ${o.order_status === 'Delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">
+                ${o.order_status}
+              </span>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Error stats:', err);
+      }
+    }
+
+    // 5. Products CRUD
+    async function loadAdminProducts() {
+      try {
+        const res = await adminFetch('/api/products');
+        if (res.ok) {
+          adminProducts = await res.json();
+          renderAdminProductsTable(adminProducts);
+          populateCategoryFilter();
+        }
+      } catch (err) {
+        console.error('Error loading products:', err);
+      }
+    }
+
+    function renderAdminProductsTable(products) {
+      const tbody = document.getElementById('admin-products-table-body');
+      if (!products.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-choco-400">No products found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = products.map(p => {
+        const rawImg = (Array.isArray(p.images) && p.images[0]) || '';
+        const img = formatMediaUrl(rawImg);
+        const variants = p.variants || {};
+        const variantPills = Object.entries(variants).map(([k, qty]) => `
+          <span class="inline-flex items-center gap-1 bg-choco-50 border border-choco-200 px-2 py-0.5 rounded-lg text-[10px] font-mono">
+            ${k}: <b>${qty}</b>
+          </span>
+        `).join(' ');
+
+        return `
+          <tr class="hover:bg-choco-50/50">
+            <td class="p-4 flex items-center gap-3">
+              <img src="${img}" class="w-12 h-12 rounded-xl object-cover bg-choco-100">
+              <div>
+                <span class="font-bold text-choco-950 block text-xs">${p.title}</span>
+                <span class="text-[10px] text-gold-600 font-semibold">${p.cocoa_percentage || ''}</span>
+              </div>
+            </td>
+            <td class="p-4 text-choco-700">${p.category}</td>
+            <td class="p-4 font-bold text-choco-950">₹${p.price}</td>
+            <td class="p-4 space-x-1">${variantPills}</td>
+            <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
+              <a href="/product/${p.id}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold transition-colors shadow-2xs" title="Preview product in storefront">
+                <span>Preview</span>
+                <span>👁️</span>
+              </a>
+              <button onclick="editProduct('${p.id}')" class="px-2.5 py-1 rounded-lg bg-choco-100 hover:bg-choco-200 text-choco-900 font-bold transition-colors">
+                Edit ✏️
+              </button>
+              <button onclick="deleteProduct('${p.id}')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition-colors">
+                Delete 🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 5.1 Category Management
+    let adminCategories = [];
+
+    async function loadAdminCategories() {
+      try {
+        const res = await adminFetch('/api/categories');
+        if (res.ok) {
+          adminCategories = await res.json();
+          renderAdminCategoriesTable(adminCategories);
+          populateCategoryDropdowns(adminCategories);
+        }
+      } catch (err) {
+        console.error('Error loading categories:', err);
+      }
+    }
+
+    function renderAdminCategoriesTable(categories) {
+      const tbody = document.getElementById('admin-categories-table-body');
+      if (!tbody) return;
+      if (!categories || !categories.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-choco-400">No categories found. Create your first category above!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = categories.map(cat => {
+        const subcats = Array.isArray(cat.subcategories) ? cat.subcategories.join(', ') : (cat.subcategories || '');
+        return `
+          <tr class="hover:bg-choco-50/50">
+            <td class="p-4 text-xl">${cat.icon || '🍫'}</td>
+            <td class="p-4 font-bold text-choco-950">${cat.name}</td>
+            <td class="p-4 text-choco-600">${subcats || '<span class="text-choco-400 italic">None</span>'}</td>
+            <td class="p-4 text-right">
+              <button onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')" class="px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition-colors">
+                Delete 🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function populateCategoryDropdowns(categories) {
+      // 1. Products table filter dropdown
+      const filterSelect = document.getElementById('admin-prod-cat-filter');
+      if (filterSelect) {
+        const currentFilter = filterSelect.value;
+        const catNames = categories.map(c => c.name);
+        filterSelect.innerHTML = '<option value="All">All Categories</option>' + catNames.map(c => `<option value="${c}" ${c === currentFilter ? 'selected' : ''}>${c}</option>`).join('');
+      }
+
+      // 2. Add/Edit Product modal category dropdown
+      const prodCatSelect = document.getElementById('edit-prod-category');
+      if (prodCatSelect) {
+        const currentVal = prodCatSelect.value;
+        prodCatSelect.innerHTML = categories.map(c => `<option value="${c.name}" ${c.name === currentVal ? 'selected' : ''}>${c.icon ? c.icon + ' ' : ''}${c.name}</option>`).join('');
+      }
+    }
+
+    function populateCategoryFilter() {
+      if (adminCategories && adminCategories.length > 0) {
+        populateCategoryDropdowns(adminCategories);
+      } else {
+        const select = document.getElementById('admin-prod-cat-filter');
+        const cats = [...new Set(adminProducts.map(p => p.category))];
+        select.innerHTML = '<option value="All">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+    }
+
+    async function handleCreateCategory(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-cat-name').value.trim();
+      const icon = document.getElementById('new-cat-icon').value.trim() || '🍫';
+      const subcatsRaw = document.getElementById('new-cat-subcats').value.trim();
+      const subcategories = subcatsRaw ? subcatsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      if (!name) return alert('Category name is required');
+
+      try {
+        const res = await adminFetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, icon, subcategories })
+        });
+        if (res.ok) {
+          document.getElementById('new-cat-name').value = '';
+          document.getElementById('new-cat-icon').value = '🍫';
+          document.getElementById('new-cat-subcats').value = '';
+          await loadAdminCategories();
+          alert('Category created successfully!');
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Failed to create category');
+        }
+      } catch (err) {
+        alert('Network error creating category');
+      }
+    }
+
+    async function deleteCategory(id, name) {
+      if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
+      try {
+        const res = await adminFetch(`/api/categories/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadAdminCategories();
+        } else {
+          alert('Failed to delete category');
+        }
+      } catch (err) {
+        alert('Error deleting category');
+      }
+    }
+
+    // 5.2 User-Friendly Variants Builder (No Raw JSON)
+    let currentVariants = {};
+
+    function renderVariantsEditor(variantsObj) {
+      currentVariants = variantsObj && typeof variantsObj === 'object' && Object.keys(variantsObj).length > 0
+        ? { ...variantsObj }
+        : { '100g Bar': 20, '250g Jar': 15, '500g Pack': 10 };
+
+      const container = document.getElementById('variants-rows-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      Object.entries(currentVariants).forEach(([name, stock]) => {
+        addVariantRow(name, stock);
+      });
+    }
+
+    function addVariantRow(name = '', stock = 20) {
+      const container = document.getElementById('variants-rows-container');
+      if (!container) return;
+
+      const rowId = 'var_row_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const rowDiv = document.createElement('div');
+      rowDiv.id = rowId;
+      rowDiv.className = 'variant-item-row flex items-center gap-2 bg-white p-2 rounded-xl border border-choco-200';
+      rowDiv.innerHTML = `
+        <div class="flex-1">
+          <input type="text" class="variant-name-input w-full px-3 py-1.5 bg-choco-50 border border-choco-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-choco-900" placeholder="e.g. 100g Bar or Box of 12" value="${name}">
+        </div>
+        <div class="w-28 flex items-center gap-1.5">
+          <input type="number" min="0" class="variant-stock-input w-full px-2 py-1.5 bg-choco-50 border border-choco-200 rounded-lg text-xs font-bold text-center focus:outline-none focus:border-choco-900" placeholder="Stock" value="${stock}">
+          <span class="text-[10px] text-choco-500 font-bold">units</span>
+        </div>
+        <button type="button" onclick="removeVariantRow('${rowId}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Pack Size">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      `;
+      container.appendChild(rowDiv);
+    }
+
+    function removeVariantRow(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        const container = document.getElementById('variants-rows-container');
+        if (container.children.length <= 1) {
+          alert('At least one pack size / variant is required.');
+          return;
+        }
+        row.remove();
+      }
+    }
+
+    function applyVariantPreset(type) {
+      if (type === 'weights') {
+        renderVariantsEditor({ '100g Bar': 25, '250g Jar': 20, '500g Pack': 15 });
+      } else if (type === 'boxes') {
+        renderVariantsEditor({ 'Box of 6': 20, 'Box of 12': 15, 'Box of 24': 10 });
+      } else if (type === 'pouches') {
+        renderVariantsEditor({ '200g Pouch': 30, '400g Tin': 18 });
+      } else if (type === 'single') {
+        renderVariantsEditor({ 'Standard Pack': 25 });
+      }
+    }
+
+    function getVariantsFromEditor() {
+      const container = document.getElementById('variants-rows-container');
+      if (!container) return { 'Standard': 20 };
+
+      const rows = container.querySelectorAll('.variant-item-row');
+      const result = {};
+
+      rows.forEach(r => {
+        const nameInput = r.querySelector('.variant-name-input');
+        const stockInput = r.querySelector('.variant-stock-input');
+        const name = (nameInput?.value || '').trim();
+        const stock = Number(stockInput?.value) || 0;
+        if (name) {
+          result[name] = stock;
+        }
+      });
+
+      if (Object.keys(result).length === 0) {
+        result['Standard'] = 20;
+      }
+      return result;
+    }
+
+    // Product Image Preview Helpers
+    function previewProductImageFile(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('img-preview');
+          const box = document.getElementById('img-preview-box');
+          const btn = document.getElementById('clear-img-btn');
+          if (img) img.src = e.target.result;
+          if (box) box.classList.remove('hidden');
+          if (btn) btn.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function previewProductImageUrl(url) {
+      const clean = (url || '').trim();
+      const img = document.getElementById('img-preview');
+      const box = document.getElementById('img-preview-box');
+      const btn = document.getElementById('clear-img-btn');
+      if (clean) {
+        if (img) img.src = clean;
+        if (box) box.classList.remove('hidden');
+        if (btn) btn.classList.remove('hidden');
+      } else {
+        const fileInput = document.getElementById('edit-prod-file');
+        if (!fileInput || !fileInput.files.length) {
+          if (box) box.classList.add('hidden');
+          if (btn) btn.classList.add('hidden');
+        }
+      }
+    }
+
+    function clearProductModalImage() {
+      const fileInput = document.getElementById('edit-prod-file');
+      const urlInput = document.getElementById('edit-prod-img-url');
+      const img = document.getElementById('img-preview');
+      const box = document.getElementById('img-preview-box');
+      const btn = document.getElementById('clear-img-btn');
+
+      if (fileInput) fileInput.value = '';
+      if (urlInput) urlInput.value = '';
+      if (img) img.src = '';
+      if (box) box.classList.add('hidden');
+      if (btn) btn.classList.add('hidden');
+    }
+
+    function openProductEditModal() {
+      document.getElementById('edit-prod-id').value = '';
+      document.getElementById('prod-modal-heading').innerText = 'Add New Product';
+      document.getElementById('edit-prod-title').value = '';
+      document.getElementById('edit-prod-price').value = '';
+      document.getElementById('edit-prod-mrp').value = '';
+      document.getElementById('edit-prod-cocoa').value = '100% Pure Cocoa Butter';
+      document.getElementById('edit-prod-desc').value = '';
+      document.getElementById('edit-prod-ingredients').value = '';
+      clearProductModalImage();
+      renderVariantsEditor({ 'Standard Pack': 20, 'Large Pack': 15 });
+      document.getElementById('edit-prod-featured').checked = false;
+      document.getElementById('edit-prod-bestseller').checked = false;
+
+      document.getElementById('product-modal-dialog').classList.remove('hidden');
+    }
+
+    function editProduct(id) {
+      const p = adminProducts.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('edit-prod-id').value = p.id;
+      document.getElementById('prod-modal-heading').innerText = 'Edit Product';
+      document.getElementById('edit-prod-title').value = p.title;
+      document.getElementById('edit-prod-category').value = p.category;
+      document.getElementById('edit-prod-price').value = p.price;
+      document.getElementById('edit-prod-mrp').value = p.mrp || '';
+      document.getElementById('edit-prod-cocoa').value = p.cocoa_percentage || '';
+      document.getElementById('edit-prod-desc').value = p.description || '';
+      document.getElementById('edit-prod-ingredients').value = p.ingredients || '';
+      
+      const firstImg = (Array.isArray(p.images) && p.images[0]) || '';
+      document.getElementById('edit-prod-img-url').value = firstImg;
+      if (firstImg) {
+        document.getElementById('img-preview').src = firstImg;
+        document.getElementById('img-preview-box').classList.remove('hidden');
+        document.getElementById('clear-img-btn').classList.remove('hidden');
+      } else {
+        clearProductModalImage();
+      }
+
+      renderVariantsEditor(p.variants || {});
+      document.getElementById('edit-prod-featured').checked = !!p.featured;
+      document.getElementById('edit-prod-bestseller').checked = !!p.best_seller;
+
+      document.getElementById('product-modal-dialog').classList.remove('hidden');
+    }
+
+    function closeProductEditModal() {
+      document.getElementById('product-modal-dialog').classList.add('hidden');
+    }
+
+    async function handleProductFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-prod-id').value;
+      const title = document.getElementById('edit-prod-title').value.trim();
+      const category = document.getElementById('edit-prod-category').value;
+      const price = Number(document.getElementById('edit-prod-price').value);
+      const mrp = Number(document.getElementById('edit-prod-mrp').value) || price;
+      const cocoaPercentage = document.getElementById('edit-prod-cocoa').value.trim();
+      const description = document.getElementById('edit-prod-desc').value.trim();
+      const ingredients = document.getElementById('edit-prod-ingredients').value.trim();
+      let imageUrl = document.getElementById('edit-prod-img-url').value.trim();
+      const fileInput = document.getElementById('edit-prod-file');
+
+      // Handle Image File Upload if selected
+      if (fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('images', fileInput.files[0]);
+        try {
+          const uploadRes = await adminFetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          });
+          const uploadData = await uploadRes.json();
+          if (uploadData.url) imageUrl = uploadData.url;
+        } catch (uploadErr) {
+          console.warn('Image upload failed, fallback to url');
+        }
+      }
+
+      const variants = getVariantsFromEditor();
+
+      const payload = {
+        title, category, price, mrp, cocoaPercentage, description, ingredients,
+        images: imageUrl ? [imageUrl] : ['https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=800&q=80'],
+        variants,
+        featured: document.getElementById('edit-prod-featured').checked,
+        bestSeller: document.getElementById('edit-prod-bestseller').checked
+      };
+
+      try {
+        const url = id ? `/api/products/${id}` : '/api/products';
+        const method = id ? 'PUT' : 'POST';
+        const res = await adminFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          closeProductEditModal();
+          await loadAdminProducts();
+          await loadAdminStats();
+        } else {
+          alert('Failed to save product');
+        }
+      } catch (err) {
+        alert('Error saving product');
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Are you sure you want to delete this product?')) return;
+      try {
+        const res = await adminFetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadAdminProducts();
+          await loadAdminStats();
+        }
+      } catch (_) {}
+    }
+
+    // 6. Orders Management
+    async function loadAdminOrders() {
+      try {
+        const res = await adminFetch('/api/orders');
+        if (res.ok) {
+          adminOrders = await res.json();
+          renderAdminOrdersTable(adminOrders);
+        }
+      } catch (err) {
+        console.error('Error loading orders:', err);
+      }
+    }
+
+    function renderAdminOrdersTable(orders) {
+      const tbody = document.getElementById('admin-orders-table-body');
+      if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-choco-400">No orders placed yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => {
+        const custName = o.customer?.name || 'Customer';
+        const custPhone = o.customer?.phone || '';
+        const itemsSummary = Array.isArray(o.items) ? o.items.map(it => `${it.title} (${it.quantity})`).join(', ') : '';
+
+        return `
+          <tr class="hover:bg-choco-50/50">
+            <td class="p-4 font-mono font-bold text-choco-950">#${o.order_number}</td>
+            <td class="p-4">
+              <span class="font-bold text-choco-950 block">${custName}</span>
+              <span class="text-choco-500 font-mono text-[11px]">${custPhone}</span>
+            </td>
+            <td class="p-4 max-w-xs truncate text-choco-700">${itemsSummary}</td>
+            <td class="p-4 font-bold text-choco-950">₹${o.total_amount}</td>
+            <td class="p-4">
+              <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-choco-50 border border-choco-200 rounded-lg px-2 py-1 text-xs font-semibold focus:outline-none">
+                <option value="Pending" ${o.order_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="Confirmed" ${o.order_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                <option value="Packing in Cold Box" ${o.order_status === 'Packing in Cold Box' ? 'selected' : ''}>Packing in Cold Box</option>
+                <option value="Shipped" ${o.order_status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="Delivered" ${o.order_status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${o.order_status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="viewOrderDetails('${o.id}')" class="px-3 py-1 rounded-lg bg-choco-100 hover:bg-choco-200 text-choco-900 font-bold">
+                Details 🔍
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      try {
+        const res = await adminFetch(`/api/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          await loadAdminStats();
+        }
+      } catch (err) {
+        console.error('Status update failed:', err);
+      }
+    }
+
+    function viewOrderDetails(id) {
+      const order = adminOrders.find(o => o.id === id);
+      if (!order) return;
+
+      activeDetailOrder = order;
+      document.getElementById('det-order-num').innerText = '#' + order.order_number;
+      document.getElementById('det-order-status').innerText = order.order_status;
+      document.getElementById('det-cust-name').innerText = order.customer?.name || '';
+      document.getElementById('det-cust-phone').innerText = order.customer?.phone || '';
+      document.getElementById('det-cust-address').innerText = `${order.customer?.address || ''}, ${order.customer?.city || ''} - ${order.customer?.pincode || ''}`;
+      document.getElementById('det-total').innerText = `₹${order.total_amount}`;
+
+      // Gift Card Note
+      const giftBox = document.getElementById('det-gift-note-box');
+      if (order.gift_message) {
+        document.getElementById('det-gift-message').innerText = `"${order.gift_message}"`;
+        giftBox.classList.remove('hidden');
+      } else {
+        giftBox.classList.add('hidden');
+      }
+
+      // Items list
+      const itemsContainer = document.getElementById('det-items-list');
+      itemsContainer.innerHTML = Array.isArray(order.items) ? order.items.map(it => `
+        <div class="flex justify-between p-2 rounded-xl bg-choco-50 border border-choco-100">
+          <div>
+            <span class="font-bold text-choco-950 block">${it.title}</span>
+            <span class="text-gold-600 text-[10px]">${it.variant || ''} x ${it.quantity}</span>
+          </div>
+          <span class="font-bold text-choco-900">₹${it.price * it.quantity}</span>
+        </div>
+      `).join('') : '';
+
+      // Direct WhatsApp Chat with Customer
+      const chatBtn = document.getElementById('det-whatsapp-chat-btn');
+      chatBtn.onclick = () => {
+        const phone = (order.customer?.phone || '').replace(/[^0-9]/g, '');
+        const msg = `Hello ${order.customer?.name || 'Customer'}! We are messaging from ChocoLux regarding your order #${order.order_number}.`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+      };
+
+      document.getElementById('order-details-modal').classList.remove('hidden');
+    }
+
+    function closeOrderDetailsModal() {
+      document.getElementById('order-details-modal').classList.add('hidden');
+      activeDetailOrder = null;
+    }
+
+    // 7. WhatsApp Baileys Management
+    async function pollWhatsAppStatus() {
+      try {
+        const res = await adminFetch('/api/whatsapp/status');
+        if (res.ok) {
+          const status = await res.json();
+          renderWhatsAppStatus(status);
+        }
+      } catch (_) {}
+      setTimeout(pollWhatsAppStatus, 5000);
+    }
+
+    function renderWhatsAppStatus(status) {
+      const pill = document.getElementById('wa-status-pill');
+      const qrBox = document.getElementById('wa-qr-box');
+
+      if (status.connected) {
+        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mb-4';
+        pill.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>🟢 Connected: ${status.phone || 'Ready'}</span>
+        `;
+        qrBox.innerHTML = `
+          <div class="text-center p-4">
+            <span class="text-4xl block mb-2">🎉</span>
+            <p class="text-xs font-bold text-emerald-800">WhatsApp is Active & Linked!</p>
+            <p class="text-[10px] text-choco-500 mt-1">Automated receipts will be sent for new orders.</p>
+          </div>
+        `;
+      } else if (status.qr) {
+        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 mb-4';
+        pill.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>Scan QR Code to Link</span>
+        `;
+        qrBox.innerHTML = `<img src="${status.qr}" class="w-full h-full object-contain">`;
+      } else {
+        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 mb-4';
+        pill.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+          <span>Disconnected</span>
+        `;
+        qrBox.innerHTML = '<p class="text-xs text-choco-400">Waiting for QR Code... Click Refresh below.</p>';
+      }
+      loadWhatsAppQueueStatus();
+    }
+
+    async function restartWhatsApp() {
+      await adminFetch('/api/whatsapp/restart', { method: 'POST' });
+      alert('WhatsApp client re-initialization triggered.');
+    }
+
+    async function disconnectWhatsApp() {
+      if (!confirm('Are you sure you want to disconnect WhatsApp session?')) return;
+      await adminFetch('/api/whatsapp/disconnect', { method: 'POST' });
+      alert('Disconnected.');
+    }
+
+    async function loadWhatsAppQueueStatus() {
+      const el = document.getElementById('wa-queue-status-text');
+      if (!el) return;
+      try {
+        const res = await adminFetch('/api/whatsapp/queue');
+        if (res.ok) {
+          const data = await res.json();
+          const count = data.unsentCount || 0;
+          if (count === 0) {
+            el.innerText = '0 pending offline messages (Queue healthy & empty ✅)';
+            el.className = 'text-emerald-700 font-semibold text-[11px]';
+          } else {
+            el.innerText = `${count} offline message(s) queued. Will auto-dispatch upon connection ⏳`;
+            el.className = 'text-amber-700 font-bold text-[11px]';
+          }
+        }
+      } catch (_) {}
+    }
+
+    async function handleWhatsAppTest(e) {
+      e.preventDefault();
+      const phone = document.getElementById('wa-test-phone').value.trim();
+      const message = document.getElementById('wa-test-msg').value.trim();
+      const btn = document.getElementById('wa-test-submit-btn');
+
+      btn.innerText = 'Queueing & Sending...';
+      try {
+        const res = await adminFetch('/api/whatsapp/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, message })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(data.message || 'Test message queued/dispatched successfully!');
+          loadWhatsAppQueueStatus();
+        } else {
+          alert(data.error || 'Failed to dispatch test message.');
+        }
+      } catch (err) {
+        alert('Network error testing WhatsApp');
+      } finally {
+        btn.innerText = 'Send WhatsApp Test Message ✉️';
+      }
+    }
+
+    // Mobile Sidebar Drawer Controller
+    function openAdminDrawer() {
+      const container = document.getElementById('admin-drawer-container');
+      const panel = document.getElementById('admin-drawer-panel');
+      if (!container || !panel) return;
+      container.classList.remove('pointer-events-none', 'opacity-0');
+      container.classList.add('pointer-events-auto', 'opacity-100');
+      panel.classList.remove('-translate-x-full');
+      panel.classList.add('translate-x-0');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeAdminDrawer() {
+      const container = document.getElementById('admin-drawer-container');
+      const panel = document.getElementById('admin-drawer-panel');
+      if (!container || !panel) return;
+      panel.classList.remove('translate-x-0');
+      panel.classList.add('-translate-x-full');
+      container.classList.remove('pointer-events-auto', 'opacity-100');
+      container.classList.add('pointer-events-none', 'opacity-0');
+      document.body.style.overflow = '';
+    }
+
+    function selectDrawerTab(tabId) {
+      setActiveTab(tabId);
+      closeAdminDrawer();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAdminDrawer();
+    });
+
+    // 8. Bind Tabs & Forms
+    function setActiveTab(targetId) {
+      // Desktop sidebar tabs
+      document.querySelectorAll('#admin-desktop-sidebar .nav-tab').forEach(t => {
+        if (t.getAttribute('data-tab') === targetId) {
+          t.classList.add('active', 'bg-choco-950', 'text-white', 'shadow-xs');
+          t.classList.remove('bg-white', 'text-choco-800');
+        } else {
+          t.classList.remove('active', 'bg-choco-950', 'text-white', 'shadow-xs');
+          t.classList.add('bg-white', 'text-choco-800');
+        }
+      });
+
+      // Mobile drawer nav buttons
+      document.querySelectorAll('#admin-drawer-panel .nav-tab').forEach(t => {
+        if (t.getAttribute('data-tab') === targetId) {
+          t.classList.add('active', 'bg-gold-500', 'text-choco-950', 'font-extrabold', 'shadow-sm');
+          t.classList.remove('bg-choco-900/40', 'text-choco-200');
+        } else {
+          t.classList.remove('active', 'bg-gold-500', 'text-choco-950', 'font-extrabold', 'shadow-sm');
+          t.classList.add('bg-choco-900/40', 'text-choco-200');
+        }
+      });
+
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      const targetPane = document.getElementById(targetId);
+      if (targetPane) targetPane.classList.remove('hidden');
+
+      if (targetId === 'tab-whatsapp') {
+        loadWhatsAppQueueStatus();
+      }
+    }
+
+    function bindTabs() {
+      document.querySelectorAll('#admin-desktop-sidebar .nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetId = tab.getAttribute('data-tab');
+          setActiveTab(targetId);
+        });
+      });
+    }
+
+    function bindForms() {
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+      document.getElementById('demo-login-btn').addEventListener('click', handleDemoLogin);
+      document.getElementById('logout-btn').addEventListener('click', handleLogout);
+      document.getElementById('store-settings-form').addEventListener('submit', handleSaveSettings);
+      document.getElementById('product-form').addEventListener('submit', handleProductFormSubmit);
+      document.getElementById('wa-test-form').addEventListener('submit', handleWhatsAppTest);
+
+      // Search & Filter
+      document.getElementById('admin-prod-search').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        const filtered = adminProducts.filter(p => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+        renderAdminProductsTable(filtered);
+      });
+
+      document.getElementById('admin-prod-cat-filter').addEventListener('change', (e) => {
+        const val = e.target.value;
+        const filtered = val === 'All' ? adminProducts : adminProducts.filter(p => p.category === val);
+        renderAdminProductsTable(filtered);
+      });
+
+      document.getElementById('order-status-filter').addEventListener('change', (e) => {
+        const val = e.target.value;
+        const filtered = val === 'All' ? adminOrders : adminOrders.filter(o => o.order_status === val);
+        renderAdminOrdersTable(filtered);
+      });
+    }
+  </script>
+</body>
+</html>

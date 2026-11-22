@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "our-shop-7bc18"
+  },
+  "targets": {
+    "our-shop-7bc18": {
+      "hosting": {
+        "snackztin": [
+          "snackztin"
+        ]
+      }
+    }
+  }
+}

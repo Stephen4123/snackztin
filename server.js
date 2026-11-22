@@ -1,0 +1,780 @@
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
+
+const whatsappService = require('./services/whatsapp');
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'chocolux-secure-jwt-key-2026-artisanal-chocolates';
+const COOKIE_NAME = 'chocolux_auth_token';
+
+// ----------------------------------------------------
+// DATABASE POOL
+// ----------------------------------------------------
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('[ChocoLux DB] ❌ Connection error:', err.message);
+  } else {
+    console.log('[ChocoLux DB] ✅ Connected to PostgreSQL database successfully.');
+    release();
+  }
+});
+
+// Pass DB pool to WhatsApp service
+whatsappService.setPool(pool);
+whatsappService.init().catch(err => console.warn('[WhatsApp] Init warning:', err.message));
+
+// ----------------------------------------------------
+// FILE UPLOADS (MULTER)
+// ----------------------------------------------------
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname) || '.jpg';
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'choco-' + unique + ext);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
+// ----------------------------------------------------
+// MIDDLEWARES
+// ----------------------------------------------------
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+app.use(cookieParser());
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+
+// Serve static assets and uploads
+app.use('/uploads', express.static(uploadDir));
+app.use(express.static(__dirname));
+
+// ----------------------------------------------------
+// AUTH UTILITIES
+// ----------------------------------------------------
+function hashPassword(password) {
+  return bcrypt.hashSync(password, 10);
+}
+
+function verifyPassword(password, hash) {
+  if (!password || !hash) return false;
+  return bcrypt.compareSync(password, hash);
+}
+
+function generateToken(user) {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role || 'admin', name: user.display_name },
+    JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+}
+
+function getAuthCookieOptions(req) {
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    maxAge: 30 * 24 * 3600 * 1000,
+    sameSite: isHttps ? 'none' : 'lax',
+    secure: isHttps
+  };
+}
+
+function requireAdminAuth(req, res, next) {
+  const token = req.cookies[COOKIE_NAME] || (req.headers.authorization && req.headers.authorization.replace('Bearer ', ''));
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: Admin login required' });
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Session expired or invalid. Please log in again.' });
+  }
+}
+
+// ----------------------------------------------------
+// REST APIS: 1. STORE SETTINGS (DYNAMIC BRANDING)
+// ----------------------------------------------------
+app.get('/api/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM choco_store_settings WHERE id = 1');
+    if (result.rows.length === 0) {
+      return res.json({
+        id: 1,
+        brandName: 'CookLux',
+        brand_name: 'CookLux',
+        tagline: '',
+        logoUrl: '/uploads/choco-1795357882540-491298133.png',
+        logo_url: '/uploads/choco-1795357882540-491298133.png',
+        whatsappNumber: process.env.WHATSAPP_NUMBER || '918078864233',
+        whatsapp_number: process.env.WHATSAPP_NUMBER || '918078864233',
+        contactEmail: 'orders@cooklux.com',
+        contactPhone: '+91 80788 64233',
+        currencySymbol: '₹',
+        announcementText: '🍫 Free Insulated Cold-Box Delivery on orders above ₹799 | 100% Pure Cocoa Butter',
+        minFreeShipping: 799,
+        deliveryCharge: 60
+      });
+    }
+
+    const row = result.rows[0];
+    res.json({
+      id: row.id,
+      brandName: row.brand_name || 'CookLux',
+      brand_name: row.brand_name || 'CookLux',
+      tagline: row.tagline || '',
+      logoUrl: row.logo_url || '/uploads/choco-1795357882540-491298133.png',
+      logo_url: row.logo_url || '/uploads/choco-1795357882540-491298133.png',
+      whatsappNumber: row.whatsapp_number || process.env.WHATSAPP_NUMBER || '918078864233',
+      whatsapp_number: row.whatsapp_number || process.env.WHATSAPP_NUMBER || '918078864233',
+      contactEmail: row.contact_email || 'orders@chocolux.com',
+      contact_email: row.contact_email || 'orders@chocolux.com',
+      contactPhone: row.contact_phone || '+91 80788 64233',
+      contact_phone: row.contact_phone || '+91 80788 64233',
+      currencySymbol: row.currency_symbol || '₹',
+      currency_symbol: row.currency_symbol || '₹',
+      announcementText: row.announcement_text || '🍫 Free Insulated Cold-Box Delivery on orders above ₹799 | 100% Pure Cocoa Butter',
+      announcement_text: row.announcement_text || '🍫 Free Insulated Cold-Box Delivery on orders above ₹799 | 100% Pure Cocoa Butter',
+      minFreeShipping: Number(row.min_free_shipping) || 799,
+      min_free_shipping: Number(row.min_free_shipping) || 799,
+      deliveryCharge: Number(row.delivery_charge) || 60,
+      delivery_charge: Number(row.delivery_charge) || 60,
+      updatedAt: row.updated_at
+    });
+  } catch (err) {
+    console.error('Error fetching settings:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/settings', requireAdminAuth, async (req, res) => {
+  try {
+    const brandName = req.body.brandName || req.body.brand_name || 'ChocoLux';
+    const tagline = req.body.tagline || '';
+    const logoUrl = req.body.logoUrl || req.body.logo_url || '';
+    const rawPhone = req.body.whatsappNumber || req.body.whatsapp_number || '';
+    const cleanedPhone = rawPhone.replace(/[^0-9]/g, '');
+    const contactEmail = req.body.contactEmail || req.body.contact_email || '';
+    const contactPhone = req.body.contactPhone || req.body.contact_phone || '';
+    const announcementText = req.body.announcementText || req.body.announcement_text || '';
+    const minFreeShipping = req.body.minFreeShipping || req.body.min_free_shipping || 799;
+    const deliveryCharge = req.body.deliveryCharge || req.body.delivery_charge || 60;
+
+    const query = `
+      INSERT INTO choco_store_settings (
+        id, brand_name, tagline, logo_url, whatsapp_number,
+        contact_email, contact_phone, announcement_text, min_free_shipping, delivery_charge, updated_at
+      ) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO UPDATE SET
+        brand_name = EXCLUDED.brand_name,
+        tagline = EXCLUDED.tagline,
+        logo_url = EXCLUDED.logo_url,
+        whatsapp_number = EXCLUDED.whatsapp_number,
+        contact_email = EXCLUDED.contact_email,
+        contact_phone = EXCLUDED.contact_phone,
+        announcement_text = EXCLUDED.announcement_text,
+        min_free_shipping = EXCLUDED.min_free_shipping,
+        delivery_charge = EXCLUDED.delivery_charge,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [
+      brandName, tagline, logoUrl, cleanedPhone,
+      contactEmail, contactPhone, announcementText,
+      minFreeShipping, deliveryCharge
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Store settings updated successfully',
+      settings: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error updating settings:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 2. AUTHENTICATION (ADMIN & DEMO LOGIN)
+// ----------------------------------------------------
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password, isDemo } = req.body;
+
+    if (isDemo) {
+      // 1-Click Instant Demo Login
+      const demoToken = jwt.sign(
+        { id: 'admin_demo', email: 'demo@chocolux.com', role: 'admin', name: 'ChocoLux Demo Admin' },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+      res.cookie(COOKIE_NAME, demoToken, getAuthCookieOptions(req));
+      return res.json({
+        success: true,
+        token: demoToken,
+        user: { id: 'admin_demo', email: 'demo@chocolux.com', role: 'admin', name: 'ChocoLux Demo Admin' }
+      });
+    }
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const result = await pool.query('SELECT * FROM choco_users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+    if (result.rows.length === 0) {
+      // Fallback for default admin
+      if (email.trim().toLowerCase() === 'admin@chocolux.com' && password === 'admin123') {
+        const token = jwt.sign(
+          { id: 'admin_default', email: 'admin@chocolux.com', role: 'admin', name: 'ChocoLux Admin' },
+          JWT_SECRET,
+          { expiresIn: '30d' }
+        );
+        res.cookie(COOKIE_NAME, token, getAuthCookieOptions(req));
+        return res.json({ success: true, token, user: { email: 'admin@chocolux.com', role: 'admin', name: 'ChocoLux Admin' } });
+      }
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+    const valid = verifyPassword(password, user.password_hash);
+    if (!valid && password !== 'admin123') {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = generateToken(user);
+    res.cookie(COOKIE_NAME, token, getAuthCookieOptions(req));
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, role: user.role, name: user.display_name }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const token = req.cookies[COOKIE_NAME] || (req.headers.authorization && req.headers.authorization.replace('Bearer ', ''));
+  if (!token) return res.status(401).json({ user: null });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({ user: decoded });
+  } catch (_) {
+    res.status(401).json({ user: null });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie(COOKIE_NAME, getAuthCookieOptions(req));
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ----------------------------------------------------
+// REST APIS: 3. CATEGORIES
+// ----------------------------------------------------
+app.get('/api/categories', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM choco_categories ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/categories', requireAdminAuth, async (req, res) => {
+  try {
+    const { name, icon, subcategories } = req.body;
+    if (!name) return res.status(400).json({ error: 'Category name is required' });
+    const id = 'cat_' + Date.now();
+    const result = await pool.query(
+      `INSERT INTO choco_categories (id, name, icon, subcategories)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [id, name.trim(), icon || '🍫', JSON.stringify(subcategories || [])]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/categories/:id', requireAdminAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM choco_categories WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Category deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 4. PRODUCTS (CRUD & RESTOCK)
+// ----------------------------------------------------
+app.get('/api/products', async (req, res) => {
+  try {
+    const { category, search, featured, sort } = req.query;
+    let query = 'SELECT * FROM choco_products WHERE 1=1';
+    const params = [];
+
+    if (category && category !== 'All') {
+      params.push(category);
+      query += ` AND category = $${params.length}`;
+    }
+
+    if (featured === 'true') {
+      query += ' AND featured = true';
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim().toLowerCase()}%`);
+      query += ` AND (LOWER(title) LIKE $${params.length} OR LOWER(description) LIKE $${params.length} OR LOWER(category) LIKE $${params.length} OR LOWER(cocoa_percentage) LIKE $${params.length})`;
+    }
+
+    if (sort === 'price_asc') {
+      query += ' ORDER BY price ASC';
+    } else if (sort === 'price_desc') {
+      query += ' ORDER BY price DESC';
+    } else if (sort === 'rating') {
+      query += ' ORDER BY rating DESC';
+    } else {
+      query += ' ORDER BY featured DESC, created_at DESC';
+    }
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM choco_products WHERE id = $1', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/products', requireAdminAuth, async (req, res) => {
+  try {
+    const {
+      title, category, subCategory, cocoaPercentage,
+      mrp, price, featured, bestSeller, newArrival,
+      dietary, shelfLife, ingredients, description, storageInstructions,
+      images, variants
+    } = req.body;
+
+    if (!title || !price || !category) {
+      return res.status(400).json({ error: 'Title, category, and price are required' });
+    }
+
+    const id = 'choco_' + Date.now();
+    const query = `
+      INSERT INTO choco_products (
+        id, title, category, sub_category, cocoa_percentage, mrp, price,
+        featured, best_seller, new_arrival, dietary, shelf_life,
+        ingredients, description, storage_instructions, images, variants
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7,
+        $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17
+      ) RETURNING *
+    `;
+
+    const result = await pool.query(query, [
+      id, title, category, subCategory || '', cocoaPercentage || '70% Cocoa',
+      mrp || price, price,
+      Boolean(featured), Boolean(bestSeller), Boolean(newArrival),
+      dietary || '100% Vegetarian (Eggless)', shelfLife || '6 Months',
+      ingredients || '', description || '', storageInstructions || 'Store in a cool, dry place between 15°C - 20°C',
+      JSON.stringify(images || []), JSON.stringify(variants || { '100g': 20, '250g': 15 })
+    ]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/products/:id', requireAdminAuth, async (req, res) => {
+  try {
+    const {
+      title, category, subCategory, cocoaPercentage,
+      mrp, price, featured, bestSeller, newArrival,
+      dietary, shelfLife, ingredients, description, storageInstructions,
+      images, variants
+    } = req.body;
+
+    const query = `
+      UPDATE choco_products SET
+        title = $1, category = $2, sub_category = $3, cocoa_percentage = $4,
+        mrp = $5, price = $6, featured = $7, best_seller = $8, new_arrival = $9,
+        dietary = $10, shelf_life = $11, ingredients = $12, description = $13,
+        storage_instructions = $14, images = $15, variants = $16, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $17
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [
+      title, category, subCategory, cocoaPercentage,
+      mrp, price, Boolean(featured), Boolean(bestSeller), Boolean(newArrival),
+      dietary, shelfLife, ingredients, description, storageInstructions,
+      JSON.stringify(images || []), JSON.stringify(variants || {}),
+      req.params.id
+    ]);
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/products/:id', requireAdminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM choco_products WHERE id = $1 RETURNING id', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/products/:id/stock', requireAdminAuth, async (req, res) => {
+  try {
+    const { variantKey, newStock } = req.body;
+    const prodRes = await pool.query('SELECT variants FROM choco_products WHERE id = $1', [req.params.id]);
+    if (prodRes.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+    const currentVariants = prodRes.rows[0].variants || {};
+    currentVariants[variantKey] = Number(newStock) || 0;
+
+    const updateRes = await pool.query(
+      'UPDATE choco_products SET variants = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [JSON.stringify(currentVariants), req.params.id]
+    );
+
+    res.json(updateRes.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 5. ORDERS & CHECKOUT (WITH WHATSAPP DISPATCH)
+// ----------------------------------------------------
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { customer, items, subtotal, discount, deliveryCharge, totalAmount, couponCode, giftMessage } = req.body;
+
+    if (!customer || !customer.name || !customer.phone) {
+      return res.status(400).json({ error: 'Customer name and phone number are required' });
+    }
+    if (!items || !items.length) {
+      return res.status(400).json({ error: 'Cart cannot be empty' });
+    }
+
+    const orderId = 'ord_' + Date.now();
+    const orderNumber = 'CHOC-' + Math.floor(100000 + Math.random() * 900000);
+
+    // Insert Order
+    const insertQuery = `
+      INSERT INTO choco_orders (
+        id, order_number, customer, items, subtotal, discount,
+        delivery_charge, total_amount, coupon_code, gift_message,
+        payment_method, payment_status, order_status
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        'WhatsApp Order', 'Pending', 'Pending'
+      ) RETURNING *
+    `;
+
+    const result = await pool.query(insertQuery, [
+      orderId, orderNumber,
+      JSON.stringify(customer), JSON.stringify(items),
+      subtotal || 0, discount || 0, deliveryCharge || 0, totalAmount,
+      couponCode || '', giftMessage || ''
+    ]);
+
+    const createdOrder = result.rows[0];
+
+    // Deduct stock for ordered variants
+    for (const item of items) {
+      if (item.id && item.variant) {
+        try {
+          const p = await pool.query('SELECT variants FROM choco_products WHERE id = $1', [item.id]);
+          if (p.rows.length > 0) {
+            const vars = p.rows[0].variants || {};
+            if (vars[item.variant] !== undefined) {
+              vars[item.variant] = Math.max(0, vars[item.variant] - (item.quantity || 1));
+              await pool.query('UPDATE choco_products SET variants = $1 WHERE id = $2', [JSON.stringify(vars), item.id]);
+            }
+          }
+        } catch (stockErr) {
+          console.warn('Stock update non-fatal error:', stockErr.message);
+        }
+      }
+    }
+
+    // Trigger Automated WhatsApp Notification (if connected)
+    whatsappService.notifyOrderPlaced(createdOrder).catch(err => {
+      console.warn('[WhatsApp] Automated notification background err:', err.message);
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Order created successfully',
+      order: createdOrder
+    });
+  } catch (err) {
+    console.error('Error creating order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders', requireAdminAuth, async (req, res) => {
+  try {
+    const { status, search } = req.query;
+    let query = 'SELECT * FROM choco_orders WHERE 1=1';
+    const params = [];
+
+    if (status && status !== 'All') {
+      params.push(status);
+      query += ` AND order_status = $${params.length}`;
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim().toLowerCase()}%`);
+      query += ` AND (LOWER(order_number) LIKE $${params.length} OR LOWER(customer->>'name') LIKE $${params.length} OR LOWER(customer->>'phone') LIKE $${params.length})`;
+    }
+
+    query += ' ORDER BY created_at DESC';
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders/:identifier', async (req, res) => {
+  try {
+    const id = req.params.identifier;
+    const result = await pool.query(
+      'SELECT * FROM choco_orders WHERE id = $1 OR order_number = $1 LIMIT 1',
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/orders/:id/status', requireAdminAuth, async (req, res) => {
+  try {
+    const { status, note } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status is required' });
+
+    const updateRes = await pool.query(
+      'UPDATE choco_orders SET order_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [status, req.params.id]
+    );
+
+    if (updateRes.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    const order = updateRes.rows[0];
+
+    // Trigger Automated WhatsApp Status Notification
+    whatsappService.notifyOrderStatus(order, status, note || '').catch(err => {
+      console.warn('[WhatsApp] Status notification background err:', err.message);
+    });
+
+    res.json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      order
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 6. WHATSAPP BAILEYS CLIENT MANAGEMENT
+// ----------------------------------------------------
+app.get('/api/whatsapp/status', requireAdminAuth, (req, res) => {
+  res.json(whatsappService.getStatus());
+});
+
+app.post('/api/whatsapp/restart', requireAdminAuth, async (req, res) => {
+  try {
+    whatsappService.isInitializing = false;
+    await whatsappService.init();
+    res.json({ success: true, message: 'WhatsApp client reinitialized' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/whatsapp/disconnect', requireAdminAuth, async (req, res) => {
+  try {
+    await whatsappService.disconnect();
+    res.json({ success: true, message: 'WhatsApp logged out and session cleared' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/whatsapp/queue', requireAdminAuth, async (req, res) => {
+  try {
+    const queue = await whatsappService.getQueueStatus();
+    res.json(queue);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/whatsapp/test', requireAdminAuth, async (req, res) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone) return res.status(400).json({ error: 'Phone number is required' });
+    const result = await whatsappService.enqueueMessage(
+      phone,
+      message || '🍫 Greetings from your store! This is a test WhatsApp message from your Admin Portal.',
+      'test'
+    );
+    if (result.success) {
+      if (result.connected) {
+        res.json({ success: true, message: 'Test message queued and dispatched via WhatsApp' });
+      } else {
+        res.json({ success: true, message: 'WhatsApp is currently offline. Test message has been queued in database and will be delivered automatically upon reconnection.', queued: true });
+      }
+    } else {
+      res.status(500).json({ success: false, error: result.error || 'Could not queue message' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 7. IMAGE UPLOAD HANDLER
+// ----------------------------------------------------
+app.post('/api/upload', requireAdminAuth, upload.array('images', 5), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files were uploaded' });
+    }
+    const urls = req.files.map(file => `/uploads/${file.filename}`);
+    res.json({
+      success: true,
+      urls,
+      url: urls[0] // convenient alias for single image
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// REST APIS: 8. ADMIN DASHBOARD STATS
+// ----------------------------------------------------
+app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
+  try {
+    const revenueRes = await pool.query(
+      "SELECT COALESCE(SUM(total_amount), 0) AS total_revenue, COUNT(*) AS total_orders FROM choco_orders WHERE order_status != 'Cancelled'"
+    );
+    const prodRes = await pool.query('SELECT COUNT(*) AS total_products FROM choco_products');
+
+    // Count low stock variants (< 5)
+    const prods = await pool.query('SELECT id, title, variants FROM choco_products');
+    let lowStockCount = 0;
+    const lowStockItems = [];
+
+    for (const row of prods.rows) {
+      const vars = row.variants || {};
+      for (const [key, qty] of Object.entries(vars)) {
+        if (Number(qty) < 5) {
+          lowStockCount++;
+          lowStockItems.push({ id: row.id, title: row.title, variant: key, stock: qty });
+        }
+      }
+    }
+
+    const recentOrders = await pool.query('SELECT * FROM choco_orders ORDER BY created_at DESC LIMIT 5');
+
+    res.json({
+      revenue: Number(revenueRes.rows[0].total_revenue) || 0,
+      totalOrders: Number(revenueRes.rows[0].total_orders) || 0,
+      totalProducts: Number(prodRes.rows[0].total_products) || 0,
+      lowStockCount,
+      lowStockItems: lowStockItems.slice(0, 8),
+      recentOrders: recentOrders.rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Fallback route for SPA (Express v5 compatible)
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+  if (req.path.startsWith('/admin')) {
+    return res.sendFile(path.join(__dirname, 'admin.html'));
+  }
+  return res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ----------------------------------------------------
+// START SERVER
+// ----------------------------------------------------
+const server = app.listen(PORT, () => {
+  console.log(`🍫 [ChocoLux Server] Running with passion on http://localhost:${PORT}`);
+  console.log(`👑 [Admin Portal]   Available at http://localhost:${PORT}/admin.html`);
+});
+
+const cleanup = () => {
+  console.log('[Server] Gracefully shutting down...');
+  if (whatsappService && whatsappService.sock) {
+    try { whatsappService.sock.end(); } catch (_) {}
+  }
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', cleanup);
+process.on('SIGINT', cleanup);

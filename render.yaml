@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: snackztin-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_raQo2gwjR4nx@ep-proud-brook-bed38f79-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require
+      - key: STORE_URL
+        value: https://snackztin.web.app
+      - key: APP_URL
+        value: https://snackztin.web.app
+      - key: WHATSAPP_NUMBER
+        value: 918078864233
+      - key: JWT_SECRET
+        value: chocolux-secure-jwt-key-2026-artisanal-chocolates

@@ -1,0 +1,33 @@
+{
+  "name": "chocolux-shop",
+  "version": "1.0.0",
+  "description": "ChocoLux — Artisanal Handcrafted Chocolates & Luxury Confections with WhatsApp Integration and Full Admin Portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "chocolate",
+    "e-commerce",
+    "whatsapp",
+    "admin-portal",
+    "chocolux"
+  ],
+  "author": "ChocoLux Team",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.5.0",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "qrcode": "^1.5.4"
+  }
+}
