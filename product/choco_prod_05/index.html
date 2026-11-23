@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="Grand Royal Gourmet Hamper (Chocolates & Mixtures) — ₹1799.00 | SnackzTin">
   <meta name="twitter:description" content="The definitive luxury hamper uniting our best-selling artisanal dark chocolates with crunchy nut and pretzel mixtures. Packaged in a velvet-lined ches">
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1526081347589-7fa3cb41b4b2?w=800&q=80">
-  <link rel="image_src" href="https://snackztin.web.app/og-preview.jpg">
+  <link rel="image_src" href="https://snackztin.web.app/og-logo.jpg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -255,8 +255,11 @@
         <span id="page-breadcrumb-cat" class="hidden"></span>
         <span id="page-breadcrumb-title" class="hidden"></span>
 
-        <button onclick="copyProductLink(event)" id="btn-copy-prod-link" title="Copy Product Link" class="w-8 h-8 rounded-full bg-white border border-choco-200/90 text-choco-600 hover:text-choco-950 flex items-center justify-center text-xs shadow-xs hover:border-choco-400 transition-all active:scale-90">
-          🔗
+        <button onclick="copyProductLink(event)" id="btn-copy-prod-link" title="Share Product" class="w-9 h-9 rounded-full bg-white border border-choco-200/90 text-choco-700 hover:text-choco-950 hover:bg-choco-50 flex items-center justify-center shadow-xs hover:border-choco-400 transition-all active:scale-90" aria-label="Share this product">
+          <svg class="w-4 h-4 text-choco-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 14l5-5-5-5" />
+            <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v1" />
+          </svg>
         </button>
       </div>
 
@@ -1298,18 +1301,55 @@
       if (el) el.innerText = `₹${subtotal}`;
     }
 
-    function copyProductLink(e) {
+    async function copyProductLink(e) {
       if (e) e.stopPropagation();
       const url = window.location.href;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          showNotification('Product link copied to clipboard! 📋');
-        }).catch(() => {
-          prompt('Copy product link:', url);
-        });
-      } else {
-        prompt('Copy product link:', url);
+      const title = currentProductDetail ? currentProductDetail.title : 'Handcrafted Treats';
+      const price = currentProductDetail ? `₹${currentProductDetail.price}` : '';
+      const priceText = price ? ` for only ${price}` : '';
+      const shareMessage = `Take a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨\n${url}`;
+
+      // 1. On mobile devices with native share capabilities, open native share sheet
+      if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+        try {
+          await navigator.share({
+            title: `${title} | SnackzTin`,
+            text: `Take a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨`,
+            url: url
+          });
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return; // User closed sheet
+        }
       }
+
+      // 2. Otherwise copy directly to clipboard without any popup/prompt
+      let copied = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareMessage);
+          copied = true;
+        } catch (_) {}
+      }
+
+      // Silent fallback via hidden textarea (guarantees zero prompt popups)
+      if (!copied) {
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = shareMessage;
+          textArea.style.position = 'fixed';
+          textArea.style.top = '-9999px';
+          textArea.style.left = '-9999px';
+          textArea.setAttribute('readonly', '');
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          copied = true;
+        } catch (_) {}
+      }
+
+      showQuickToast('Link copied with invite! Share it with friends 🍫✨', '🔗');
     }
 
     function loadDetailRelatedProducts(category, excludeId) {

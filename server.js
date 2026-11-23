@@ -20,8 +20,10 @@ const COOKIE_NAME = 'chocolux_auth_token';
 // ----------------------------------------------------
 // DATABASE POOL
 // ----------------------------------------------------
-const DEFAULT_DATABASE_URL = 'postgresql://neondb_owner:npg_raQo2gwjR4nx@ep-proud-brook-bed38f79-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require';
-const DATABASE_URL = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.warn('[SnackzTin DB] ⚠️ DATABASE_URL is not set in environment. Please set it in your .env or cloud provider dashboard.');
+}
 
 const pool = new Pool({
   connectionString: DATABASE_URL,

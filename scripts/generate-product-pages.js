@@ -3,8 +3,11 @@ const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const DEFAULT_DATABASE_URL = 'postgresql://neondb_owner:npg_raQo2gwjR4nx@ep-proud-brook-bed38f79-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require';
-const DATABASE_URL = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('❌ Error: DATABASE_URL environment variable is required to generate product pages.');
+  process.exit(1);
+}
 const SITE_URL = 'https://snackztin.web.app';
 
 async function generate() {
