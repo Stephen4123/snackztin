@@ -36,7 +36,14 @@ async function generate() {
       const rawImg = (Array.isArray(p.images) && p.images[0]) || '';
       const imgUrl = rawImg.startsWith('http') ? rawImg : `${SITE_URL}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
       const pageTitle = `${p.title} — ₹${p.price} | ${brand}`;
-      const pageDesc = p.description ? p.description.substring(0, 150) : `Order ${p.title} at ₹${p.price} on ${brand}. Melt-free delivery across India.`;
+      
+      let rawDesc = p.description || `Order ${p.title} at ₹${p.price} on ${brand}. Melt-free delivery across India.`;
+      let pageDesc = rawDesc;
+      if (rawDesc.length > 150) {
+        const truncated = rawDesc.substring(0, 147);
+        const lastSpace = truncated.lastIndexOf(' ');
+        pageDesc = (lastSpace > 60 ? truncated.substring(0, lastSpace) : truncated) + '...';
+      }
       const prodUrl = `${SITE_URL}/product/${p.id}`;
 
       let html = templateHtml;
@@ -51,6 +58,11 @@ async function generate() {
       html = html.replace(/<meta name="twitter:title" content=".*?">/i, `<meta name="twitter:title" content="${pageTitle}">`);
       html = html.replace(/<meta name="twitter:description" content=".*?">/i, `<meta name="twitter:description" content="${pageDesc}">`);
       html = html.replace(/<meta name="twitter:image" content=".*?">/i, `<meta name="twitter:image" content="${imgUrl}">`);
+      html = html.replace(/<link rel="image_src" href=".*?">/i, `<link rel="image_src" href="${imgUrl}">`);
+
+      // Remove misleading hardcoded width/height so crawler uses native image aspect ratio
+      html = html.replace(/<meta property="og:image:width" content=".*?">\s*/i, '');
+      html = html.replace(/<meta property="og:image:height" content=".*?">\s*/i, '');
 
       // Write product/<id>/index.html
       const subDir = path.join(productsDir, p.id);

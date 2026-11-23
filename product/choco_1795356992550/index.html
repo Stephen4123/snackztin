@@ -19,13 +19,11 @@
   <meta property="og:image" id="og-image" content="https://snackztin.web.app/uploads/choco-1795356992486-522477744.png">
   <meta property="og:image:secure_url" content="https://snackztin.web.app/uploads/choco-1795356992486-522477744.png">
   <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Royal Roasted Dry-Fruit & Dark Chocolate Trail Mixture — ₹500.00 | SnackzTin">
   <meta name="twitter:description" content="sdxbdxfb">
   <meta name="twitter:image" content="https://snackztin.web.app/uploads/choco-1795356992486-522477744.png">
-  <link rel="image_src" href="https://snackztin.web.app/og-logo.jpg">
+  <link rel="image_src" href="https://snackztin.web.app/uploads/choco-1795356992486-522477744.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -1307,7 +1305,7 @@
       const title = currentProductDetail ? currentProductDetail.title : 'Handcrafted Treats';
       const price = currentProductDetail ? `₹${currentProductDetail.price}` : '';
       const priceText = price ? ` for only ${price}` : '';
-      const shareMessage = `Take a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨\n${url}`;
+      const shareMessage = `${url}\n\nTake a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨`;
 
       // 1. On mobile devices with native share capabilities, open native share sheet
       if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {

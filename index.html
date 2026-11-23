@@ -1307,7 +1307,7 @@
       const title = currentProductDetail ? currentProductDetail.title : 'Handcrafted Treats';
       const price = currentProductDetail ? `₹${currentProductDetail.price}` : '';
       const priceText = price ? ` for only ${price}` : '';
-      const shareMessage = `Take a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨\n${url}`;
+      const shareMessage = `${url}\n\nTake a look at this delicious ${title}${priceText} on SnackzTin! 🍫✨`;
 
       // 1. On mobile devices with native share capabilities, open native share sheet
       if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
