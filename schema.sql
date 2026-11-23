@@ -81,24 +81,37 @@ CREATE TABLE IF NOT EXISTS choco_orders (
     payment_method VARCHAR(64) NOT NULL DEFAULT 'WhatsApp Order',
     payment_status VARCHAR(64) DEFAULT 'Pending',
     order_status VARCHAR(64) DEFAULT 'Pending', -- 'Pending', 'Confirmed', 'Packing in Cold Box', 'Shipped', 'Delivered', 'Cancelled'
+    user_uid VARCHAR(64),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_choco_orders_order_number ON choco_orders(order_number);
 CREATE INDEX IF NOT EXISTS idx_choco_orders_status ON choco_orders(order_status);
+CREATE INDEX IF NOT EXISTS idx_choco_orders_user_uid ON choco_orders(user_uid);
 CREATE INDEX IF NOT EXISTS idx_choco_orders_created_at ON choco_orders(created_at DESC);
 
--- 5. Admin / Users Table
+-- 5. Admin & Customer Users Table
 CREATE TABLE IF NOT EXISTS choco_users (
     id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255),
+    display_name VARCHAR(255),
+    phone VARCHAR(32),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
-    role VARCHAR(32) DEFAULT 'admin',
+    role VARCHAR(32) DEFAULT 'customer', -- 'customer' | 'admin'
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(32),
+    reset_token VARCHAR(255),
+    reset_token_expiry TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_choco_users_unique_lower_email ON choco_users (LOWER(TRIM(email))) WHERE email IS NOT NULL AND email <> '';
+CREATE INDEX IF NOT EXISTS idx_choco_users_phone ON choco_users(phone);
 
 -- Seed default admin account (admin@chocolux.com / admin123)
 -- bcrypt hash for 'admin123' is $2a$10$wE8wB29U29.pZ5e49k5Vz.c2Z8V2N3v5W5C5r2Z8V2N3v5W5C5r2 or standard bcrypt

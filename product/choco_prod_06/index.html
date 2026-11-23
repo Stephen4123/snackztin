@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <base href="/">
   <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
   <link id="site-favicon" rel="icon" type="image/png" href="/uploads/choco-1795357882540-491298133.png">
   <title id="page-title">Wild Raspberry & White Chocolate Ganache Hearts — ₹460.00 | SnackzTin</title>
 
@@ -121,6 +122,14 @@
             </svg>
             <span>WhatsApp Us</span>
           </a>
+
+          <!-- User Authentication & Account Dropdown -->
+          <div id="user-account-btn-container" class="relative">
+            <button id="login-modal-trigger-btn" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-choco-200 bg-white hover:border-gold-400 text-xs font-semibold text-choco-950 transition cursor-pointer shadow-xs" title="Sign In or Register">
+              <span>👤</span>
+              <span class="text-xs">Sign In</span>
+            </button>
+          </div>
 
           <!-- Track Order Modal Button -->
           <button id="track-order-modal-btn" class="p-2 sm:p-2.5 rounded-full hover:bg-choco-100 text-choco-800 transition-colors" title="Track Order">
@@ -628,6 +637,142 @@
     </div>
   </div>
 
+  <!-- ============================================================== -->
+  <!-- CUSTOMER ORDERS MODAL (VIEW SPECIFIC USER'S ORDERS)            -->
+  <!-- ============================================================== -->
+  <div id="orders-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" onclick="closeOrdersModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div class="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-5 sm:p-7 z-10 border border-choco-200 animate-in fade-in zoom-in-95 my-8">
+        <div class="flex items-center justify-between pb-3.5 border-b border-choco-100 mb-4">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">📦</span>
+            <div>
+              <h4 class="font-serif font-bold text-choco-950 text-lg sm:text-xl">My Orders & Live Status</h4>
+              <p class="text-[11px] text-choco-600">Track and view your personal confection orders</p>
+            </div>
+          </div>
+          <button id="orders-modal-close-btn" onclick="closeOrdersModal()" class="w-8 h-8 rounded-full bg-choco-100 hover:bg-choco-200 text-choco-800 font-bold flex items-center justify-center text-xs transition cursor-pointer">✕</button>
+        </div>
+        <div id="orders-list-container" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+          <!-- Injected dynamically by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- CUSTOMER AUTHENTICATION MODAL (SIGN IN / REGISTER)             -->
+  <!-- ============================================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" onclick="closeAuthModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div class="relative bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 sm:p-8 z-10 border border-choco-200 animate-in fade-in zoom-in-95 my-8">
+        <button id="auth-modal-close-btn" onclick="closeAuthModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-choco-100 hover:bg-choco-200 text-choco-800 font-bold flex items-center justify-center text-xs transition cursor-pointer">✕</button>
+        
+        <div class="text-center mb-5">
+          <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-choco-900 border border-choco-800 text-gold-400 flex items-center justify-center text-2xl font-serif shadow-sm">🍫</div>
+          <h3 class="font-serif font-bold text-xl text-choco-950">Welcome to SnackzTin</h3>
+          <p class="text-xs text-choco-600 mt-0.5">Sign in to place orders, track delivery, and view receipts</p>
+        </div>
+
+        <!-- Dynamic Notice Banner (e.g. Please sign in to order) -->
+        <div id="auth-notice-banner" class="hidden mb-4 p-3 bg-gold-400/15 border border-gold-500/40 rounded-2xl text-choco-900 text-xs font-medium flex items-center gap-2">
+          <span class="text-base">🔒</span>
+          <span id="auth-notice-text">Please sign in to place your order.</span>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div class="flex border-b border-choco-100 mb-5">
+          <button id="auth-tab-login" type="button" onclick="switchAuthTab('login')" class="flex-1 pb-2.5 text-xs font-bold border-b-2 border-choco-950 text-choco-950 transition cursor-pointer">
+            Sign In
+          </button>
+          <button id="auth-tab-register" type="button" onclick="switchAuthTab('register')" class="flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-choco-400 hover:text-choco-700 transition cursor-pointer">
+            Create Account
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="auth-login-form" onsubmit="handleAuthLogin(event)" class="space-y-3.5 text-xs">
+          <div>
+            <label class="block font-semibold text-choco-800 mb-1">Mobile Phone or Email *</label>
+            <input type="text" id="login-identifier" required placeholder="e.g. 9876543210 or name@example.com" class="w-full px-3.5 py-2.5 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-semibold text-choco-800">Password *</label>
+              <button type="button" onclick="showForgotPasswordForm()" class="text-[11px] text-choco-700 font-bold hover:underline cursor-pointer">Forgot?</button>
+            </div>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <button type="submit" id="login-submit-btn" class="w-full py-3 bg-choco-950 text-white font-bold rounded-xl hover:bg-choco-900 transition shadow-sm mt-1 cursor-pointer">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="auth-register-form" onsubmit="handleAuthRegister(event)" class="space-y-3 text-xs hidden">
+          <div>
+            <label class="block font-semibold text-choco-800 mb-0.5">Full Name *</label>
+            <input type="text" id="reg-name" required placeholder="e.g. Priya Sharma" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-choco-800 mb-0.5">WhatsApp Mobile *</label>
+              <input type="tel" id="reg-phone" required placeholder="10-digit number" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+            </div>
+            <div>
+              <label class="block font-semibold text-choco-800 mb-0.5">Email Address</label>
+              <input type="email" id="reg-email" placeholder="you@example.com" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold text-choco-800 mb-0.5">Password * (Min. 6 chars)</label>
+            <input type="password" id="reg-password" required minlength="6" placeholder="Create secure password" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-semibold text-choco-800 mb-0.5">Delivery Address</label>
+            <input type="text" id="reg-address" placeholder="House No., Street, Landmark" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-choco-800 mb-0.5">City / Town</label>
+              <input type="text" id="reg-city" placeholder="e.g. Bangalore" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+            </div>
+            <div>
+              <label class="block font-semibold text-choco-800 mb-0.5">PIN Code</label>
+              <input type="text" id="reg-pincode" placeholder="e.g. 560001" class="w-full px-3 py-2 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+            </div>
+          </div>
+          <button type="submit" id="reg-submit-btn" class="w-full py-3 bg-choco-950 text-white font-bold rounded-xl hover:bg-choco-900 transition mt-2 shadow-sm cursor-pointer">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Forgot / Reset Password Form (Hidden by default) -->
+        <form id="auth-reset-form" onsubmit="handleAuthReset(event)" class="space-y-3.5 text-xs hidden">
+          <div class="p-3 bg-choco-100/70 border border-choco-200 rounded-xl text-choco-900 text-[11px] leading-relaxed">
+            Enter your registered WhatsApp phone number or email and your new password.
+          </div>
+          <div>
+            <label class="block font-semibold text-choco-800 mb-1">Registered Phone or Email *</label>
+            <input type="text" id="reset-identifier" required placeholder="e.g. 9876543210 or name@example.com" class="w-full px-3.5 py-2.5 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-semibold text-choco-800 mb-1">New Password * (Min. 6 chars)</label>
+            <input type="password" id="reset-password" required minlength="6" placeholder="Enter new password" class="w-full px-3.5 py-2.5 bg-choco-50/60 border border-choco-200 rounded-xl focus:border-choco-900 focus:bg-white focus:outline-none" />
+          </div>
+          <button type="submit" id="reset-submit-btn" class="w-full py-3 bg-emerald-700 text-white font-bold rounded-xl hover:bg-emerald-800 transition cursor-pointer">
+            Save & Reset Password
+          </button>
+          <button type="button" onclick="showLoginForm()" class="w-full py-2 text-choco-600 hover:text-choco-950 text-[11px] font-bold cursor-pointer">
+            ← Back to Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="bg-choco-950 text-choco-300 border-t border-choco-800 pt-12 pb-8 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -759,12 +904,429 @@
       }
     }
 
+    // ==============================================================
+    // CUSTOMER AUTHENTICATION & ORDERS STATE
+    // ==============================================================
+    let pendingOrderAction = null;
+
+    function prefillCustomerDetails(user) {
+      if (!user) return;
+      const nameInput = document.getElementById('cust-name');
+      const phoneInput = document.getElementById('cust-phone');
+      const addressInput = document.getElementById('cust-address');
+      const cityInput = document.getElementById('cust-city');
+      const pinInput = document.getElementById('cust-pincode');
+
+      if (nameInput && user.name && !nameInput.value) nameInput.value = user.name;
+      if (phoneInput && user.phone && !phoneInput.value) phoneInput.value = user.phone;
+      if (addressInput && user.address && !addressInput.value) addressInput.value = user.address;
+      if (cityInput && user.city && !cityInput.value) cityInput.value = user.city;
+      if (pinInput && user.pincode && !pinInput.value) pinInput.value = user.pincode;
+    }
+
+    function renderUserAccountButton(user) {
+      const container = document.getElementById('user-account-btn-container');
+      if (!container) return;
+
+      if (user && user.id) {
+        const displayName = user.name || user.displayName || 'Account';
+        const initials = displayName.charAt(0).toUpperCase();
+        const subInfo = user.email || user.phone || 'Signed In';
+
+        container.innerHTML = `
+          <div class="relative">
+            <button id="user-account-dropdown-toggle" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-choco-200 bg-white hover:border-gold-400 text-xs font-semibold text-choco-950 transition cursor-pointer shadow-xs">
+              <span class="w-6 h-6 rounded-full bg-choco-900 text-gold-400 flex items-center justify-center text-[11px] font-bold">
+                ${initials}
+              </span>
+              <span class="hidden sm:inline max-w-[100px] truncate font-medium">${displayName}</span>
+              <span class="text-[10px] text-choco-400">▼</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="user-account-dropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-choco-100 py-2 hidden z-50">
+              <div class="px-3.5 py-2 border-b border-choco-50">
+                <p class="text-[10px] uppercase font-bold text-choco-400 tracking-wider">Signed in as</p>
+                <p class="text-xs font-bold text-choco-950 truncate mt-0.5">${displayName}</p>
+                <p class="text-[11px] text-choco-500 truncate font-mono">${subInfo}</p>
+              </div>
+
+              <div class="py-1">
+                <button id="view-my-orders-btn" type="button" class="w-full text-left px-3.5 py-2 text-xs font-medium text-choco-800 hover:bg-choco-50 hover:text-choco-950 flex items-center gap-2.5 transition cursor-pointer">
+                  <span>📦</span>
+                  <span>My Orders & Status</span>
+                </button>
+              </div>
+
+              <div class="border-t border-choco-50 pt-1">
+                <button id="user-logout-btn" type="button" class="w-full text-left px-3.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition cursor-pointer">
+                  <span>🚪</span>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const toggleBtn = container.querySelector('#user-account-dropdown-toggle');
+        const dropdown = container.querySelector('#user-account-dropdown');
+
+        toggleBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown?.classList.toggle('hidden');
+        });
+
+        container.querySelector('#view-my-orders-btn')?.addEventListener('click', () => {
+          dropdown?.classList.add('hidden');
+          openOrdersTrackingModal();
+        });
+
+        container.querySelector('#user-logout-btn')?.addEventListener('click', async () => {
+          dropdown?.classList.add('hidden');
+          if (window.authService) await window.authService.logout();
+          showQuickToast('Signed out successfully 👋', '🚪');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!container.contains(e.target)) {
+            dropdown?.classList.add('hidden');
+          }
+        });
+      } else {
+        container.innerHTML = `
+          <button id="login-modal-trigger-btn" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-choco-200 bg-white hover:border-gold-400 text-xs font-semibold text-choco-950 transition cursor-pointer shadow-xs" title="Sign In or Register">
+            <span>👤</span>
+            <span class="text-xs">Sign In</span>
+          </button>
+        `;
+        container.querySelector('#login-modal-trigger-btn')?.addEventListener('click', () => openAuthModal());
+      }
+    }
+
+    function openAuthModal(noticeText = '') {
+      const modal = document.getElementById('auth-modal');
+      const noticeBanner = document.getElementById('auth-notice-banner');
+      const noticeSpan = document.getElementById('auth-notice-text');
+
+      if (noticeText && noticeBanner && noticeSpan) {
+        noticeSpan.innerText = noticeText;
+        noticeBanner.classList.remove('hidden');
+      } else if (noticeBanner) {
+        noticeBanner.classList.add('hidden');
+      }
+
+      showLoginForm();
+      modal?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      modal?.classList.add('hidden');
+      document.body.style.overflow = '';
+      pendingOrderAction = null;
+    }
+
+    function switchAuthTab(tab) {
+      const tabLogin = document.getElementById('auth-tab-login');
+      const tabReg = document.getElementById('auth-tab-register');
+      const formLogin = document.getElementById('auth-login-form');
+      const formReg = document.getElementById('auth-register-form');
+      const formReset = document.getElementById('auth-reset-form');
+
+      formReset?.classList.add('hidden');
+
+      if (tab === 'login') {
+        tabLogin.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-choco-950 text-choco-950 transition cursor-pointer';
+        tabReg.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-choco-400 hover:text-choco-700 transition cursor-pointer';
+        formLogin?.classList.remove('hidden');
+        formReg?.classList.add('hidden');
+      } else {
+        tabReg.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-choco-950 text-choco-950 transition cursor-pointer';
+        tabLogin.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-choco-400 hover:text-choco-700 transition cursor-pointer';
+        formReg?.classList.remove('hidden');
+        formLogin?.classList.add('hidden');
+      }
+    }
+
+    function showForgotPasswordForm() {
+      document.getElementById('auth-login-form')?.classList.add('hidden');
+      document.getElementById('auth-register-form')?.classList.add('hidden');
+      document.getElementById('auth-reset-form')?.classList.remove('hidden');
+    }
+
+    function showLoginForm() {
+      switchAuthTab('login');
+    }
+
+    async function handleAuthLogin(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-submit-btn');
+
+      btn.disabled = true;
+      btn.innerText = 'Signing In...';
+
+      const res = await window.authService.login(identifier, password);
+      btn.disabled = false;
+      btn.innerText = 'Sign In';
+
+      if (res.success) {
+        showQuickToast(`Welcome back, ${res.user.name || 'Friend'}! 🍫`, '✨');
+        const modal = document.getElementById('auth-modal');
+        modal?.classList.add('hidden');
+        document.body.style.overflow = '';
+        resumePendingOrderAction(res.user);
+      } else {
+        alert(res.error || 'Invalid credentials');
+      }
+    }
+
+    async function handleAuthRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const address = document.getElementById('reg-address').value.trim();
+      const city = document.getElementById('reg-city').value.trim();
+      const pincode = document.getElementById('reg-pincode').value.trim();
+      const btn = document.getElementById('reg-submit-btn');
+
+      btn.disabled = true;
+      btn.innerText = 'Creating Account...';
+
+      const res = await window.authService.register({
+        name, phone, email, password, address, city, pincode
+      });
+      btn.disabled = false;
+      btn.innerText = 'Create Account';
+
+      if (res.success) {
+        showQuickToast(`Account created! Welcome, ${res.user.name}! 🎉`, '🍫');
+        const modal = document.getElementById('auth-modal');
+        modal?.classList.add('hidden');
+        document.body.style.overflow = '';
+        resumePendingOrderAction(res.user);
+      } else {
+        alert(res.error || 'Registration failed');
+      }
+    }
+
+    async function handleAuthReset(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('reset-identifier').value.trim();
+      const newPassword = document.getElementById('reset-password').value;
+      const btn = document.getElementById('reset-submit-btn');
+
+      btn.disabled = true;
+      btn.innerText = 'Updating Password...';
+
+      const res = await window.authService.resetPassword({
+        emailOrPhone: identifier,
+        newPassword
+      });
+      btn.disabled = false;
+      btn.innerText = 'Save & Reset Password';
+
+      if (res.success) {
+        alert('Password updated successfully! Please sign in with your new password.');
+        showLoginForm();
+      } else {
+        alert(res.error || 'Failed to update password');
+      }
+    }
+
+    function resumePendingOrderAction(user) {
+      const action = pendingOrderAction;
+      pendingOrderAction = null;
+      prefillCustomerDetails(user);
+
+      if (!action) return;
+
+      if (action === 'checkout' || action.type === 'checkout') {
+        document.getElementById('checkout-modal')?.classList.remove('hidden');
+      } else if (action === 'order-detail' || action.type === 'detail-wa') {
+        orderDetailOnWhatsApp();
+      } else if (action.type === 'single-wa') {
+        orderSingleViaWhatsApp(action.productId, action.variantName);
+      }
+    }
+
+    async function openOrdersTrackingModal() {
+      const modal = document.getElementById('orders-modal');
+      const listContainer = document.getElementById('orders-list-container');
+      if (!modal || !listContainer) return;
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      const user = window.authService ? window.authService.getUser() : null;
+      if (!user) {
+        listContainer.innerHTML = `
+          <div class="py-12 text-center text-choco-600 text-xs">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-choco-100 text-choco-900 flex items-center justify-center text-2xl font-bold">🔒</div>
+            <h4 class="font-serif font-bold text-choco-950 text-base mb-1">Sign In to View Your Orders</h4>
+            <p class="text-choco-500 max-w-sm mx-auto mb-5 leading-relaxed">
+              Sign in with your registered mobile phone or email to view your personal order history, live cold-box progress, and tracking details.
+            </p>
+            <button onclick="closeOrdersModal(); openAuthModal('Please sign in to view your orders.');" class="px-6 py-2.5 bg-choco-950 hover:bg-choco-900 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer">
+              Sign In / Register
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = `
+        <div class="py-12 text-center text-choco-400 text-xs">
+          <div class="inline-block animate-spin w-7 h-7 border-3 border-choco-800 border-t-transparent rounded-full mb-3"></div>
+          <p class="font-medium text-choco-700">Fetching your orders from database...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(apiUrl('/api/orders?my=true'), {
+          headers: window.authService.getAuthHeaders(),
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to load orders');
+        }
+
+        const orders = await res.json();
+        renderOrdersList(orders, user);
+      } catch (err) {
+        listContainer.innerHTML = `
+          <div class="py-10 text-center text-xs text-choco-500">
+            <p class="font-bold text-choco-800 mb-1">Could not fetch your orders</p>
+            <p class="text-[11px] text-choco-400 mb-3">${err.message}</p>
+            <button onclick="openOrdersTrackingModal()" class="px-4 py-1.5 bg-choco-100 hover:bg-choco-200 text-choco-900 font-bold rounded-lg text-xs cursor-pointer">Retry</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderOrdersList(orders, user) {
+      const listContainer = document.getElementById('orders-list-container');
+      if (!listContainer) return;
+
+      if (!orders || orders.length === 0) {
+        listContainer.innerHTML = `
+          <div class="py-12 text-center text-choco-500 text-xs">
+            <div class="text-4xl mb-2">🍫</div>
+            <h5 class="font-serif font-bold text-choco-950 text-base mb-1">No Orders Yet, ${user.name || 'Friend'}!</h5>
+            <p class="text-choco-400 max-w-xs mx-auto mb-5 leading-relaxed">
+              When you place an order with your account, your live cold-box journey and details will appear right here.
+            </p>
+            <button onclick="closeOrdersModal(); navigateTo('listing');" class="px-5 py-2 rounded-xl bg-choco-950 text-white font-bold text-xs hover:bg-choco-900 transition cursor-pointer">
+              Explore Our Chocolates ✨
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const statusBadges = {
+        'Pending': 'bg-amber-100 text-amber-900 border-amber-200',
+        'Confirmed': 'bg-blue-100 text-blue-900 border-blue-200',
+        'Packing in Cold Box': 'bg-indigo-100 text-indigo-900 border-indigo-200',
+        'Preparing': 'bg-indigo-100 text-indigo-900 border-indigo-200',
+        'Shipped': 'bg-purple-100 text-purple-900 border-purple-200',
+        'Delivered': 'bg-emerald-100 text-emerald-900 border-emerald-200',
+        'Cancelled': 'bg-red-100 text-red-900 border-red-200'
+      };
+
+      const stages = ['Pending', 'Confirmed', 'Packing in Cold Box', 'Delivered'];
+
+      listContainer.innerHTML = orders.map(ord => {
+        const items = typeof ord.items === 'string' ? JSON.parse(ord.items) : (ord.items || []);
+        const cust = typeof ord.customer === 'string' ? JSON.parse(ord.customer) : (ord.customer || {});
+        const status = ord.order_status || 'Pending';
+        const badgeClass = statusBadges[status] || 'bg-choco-100 text-choco-900 border-choco-200';
+
+        const stageIndex = stages.findIndex(s => s.toLowerCase() === status.toLowerCase());
+        const effectiveIndex = stageIndex >= 0 ? stageIndex : 0;
+        const progressPercent = Math.max(15, ((effectiveIndex + 1) / stages.length) * 100);
+
+        const officialPhone = storeSettings.whatsappNumber || '918078864233';
+        const waInquiryMsg = `Hello SnackzTin! Tracking update request for Order #${ord.order_number}.`;
+
+        return `
+          <div class="p-4 sm:p-5 bg-choco-50/50 rounded-2xl border border-choco-200/80 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-choco-100 text-xs">
+              <div>
+                <span class="font-mono font-bold text-choco-950 text-sm">#${ord.order_number}</span>
+                <span class="text-choco-400 ml-2">• ${new Date(ord.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold border ${badgeClass}">
+                ${status}
+              </span>
+            </div>
+
+            <!-- Stepper Progress Bar -->
+            <div class="py-1">
+              <div class="flex items-center justify-between text-[10px] font-semibold text-choco-600 mb-1">
+                ${stages.map((st, i) => `
+                  <span class="${effectiveIndex >= i ? 'text-choco-950 font-bold' : 'text-choco-400'}">${st}</span>
+                `).join('')}
+              </div>
+              <div class="w-full bg-choco-200/80 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-choco-800 to-gold-500 h-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+              </div>
+            </div>
+
+            <!-- Items -->
+            <div class="text-xs text-choco-800 space-y-1.5 py-1">
+              ${items.map(it => `
+                <div class="flex items-center justify-between">
+                  <span class="font-medium">${it.title} <span class="text-choco-500">(${it.variant || 'Standard'})</span> x${it.quantity}</span>
+                  <span class="font-semibold text-choco-950">₹${Number(it.price) * Number(it.quantity)}</span>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Summary & WhatsApp Action -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-choco-100 text-xs">
+              <div>
+                <span class="text-choco-500 text-[11px]">Total: </span>
+                <span class="font-bold text-choco-950 text-sm">₹${ord.total_amount}</span>
+                ${Number(ord.delivery_charge) === 0 ? '<span class="ml-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Free Cold-Box Delivery</span>' : ''}
+              </div>
+              <div class="flex items-center gap-2">
+                <a href="https://wa.me/${officialPhone}?text=${encodeURIComponent(waInquiryMsg)}" target="_blank"
+                  class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                  <span>💬 WhatsApp Live Support</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function closeOrdersModal() {
+      const modal = document.getElementById('orders-modal');
+      modal?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       showCatalogLoading();
       await fetchStoreSettings();
       await Promise.all([fetchCategories(), fetchProducts()]);
       updateCartUI();
       bindEvents();
+
+      // Initialize Customer Auth Listener
+      if (window.authService) {
+        window.authService.onAuthStateChanged(user => {
+          renderUserAccountButton(user);
+          if (user) prefillCustomerDetails(user);
+        });
+      }
 
       // Check if URL has ?product=ID or /product/ID
       handleRouting();
@@ -1456,10 +2018,16 @@
     }
 
     function orderSingleViaWhatsApp(productId, variantName) {
+      if (!window.authService || !window.authService.isAuthenticated()) {
+        pendingOrderAction = { type: 'single-wa', productId, variantName };
+        openAuthModal('Please sign in or create an account to order on WhatsApp.');
+        return;
+      }
+
       const product = allProducts.find(p => p.id === productId);
       if (!product) return;
 
-      const brand = storeSettings.brandName || 'ChocoBlend';
+      const brand = storeSettings.brandName || 'SnackzTin';
       const phone = storeSettings.whatsappNumber || '918078864233';
 
       const msg = 
@@ -1480,6 +2048,12 @@ Please confirm availability and delivery details. Thank you!`;
 
     function orderDetailOnWhatsApp() {
       if (!currentProductDetail) return;
+      if (!window.authService || !window.authService.isAuthenticated()) {
+        pendingOrderAction = { type: 'detail-wa' };
+        openAuthModal('Please sign in or create an account to order on WhatsApp.');
+        return;
+      }
+
       const brand = storeSettings.brandName || 'SnackzTin';
       const phone = storeSettings.whatsappNumber || '918078864233';
 
@@ -1603,13 +2177,15 @@ Please confirm availability and sharing delivery details. Thank you!`;
       const deliveryCharge = subtotal >= minFree ? 0 : Number(storeSettings.deliveryCharge) || 60;
       const totalAmount = subtotal + deliveryCharge;
 
+      const user = window.authService ? window.authService.getUser() : null;
       const orderPayload = {
         customer: { name, phone, address, city, pincode },
         items: cart,
         subtotal,
         deliveryCharge,
         totalAmount,
-        giftMessage
+        giftMessage,
+        userUid: user ? user.id : null
       };
 
       try {
@@ -1619,7 +2195,11 @@ Please confirm availability and sharing delivery details. Thank you!`;
 
         const res = await fetch(apiUrl('/api/orders'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            ...(window.authService ? window.authService.getAuthHeaders() : {}),
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
           body: JSON.stringify(orderPayload)
         });
 
@@ -1711,6 +2291,13 @@ Thank you for shopping with *${brand}*!`;
 
       document.getElementById('open-checkout-modal-btn').addEventListener('click', () => {
         if (cart.length === 0) return alert('Your cart is empty!');
+        if (!window.authService || !window.authService.isAuthenticated()) {
+          pendingOrderAction = 'checkout';
+          openAuthModal('Please sign in or create an account to proceed to checkout.');
+          return;
+        }
+        const user = window.authService.getUser();
+        prefillCustomerDetails(user);
         document.getElementById('checkout-modal').classList.remove('hidden');
       });
       document.getElementById('close-checkout-modal-btn').addEventListener('click', () => {
@@ -1719,7 +2306,7 @@ Thank you for shopping with *${brand}*!`;
       document.getElementById('checkout-form').addEventListener('submit', handleCheckoutSubmit);
 
       document.getElementById('track-order-modal-btn').addEventListener('click', () => {
-        document.getElementById('track-modal').classList.remove('hidden');
+        openOrdersTrackingModal();
       });
       document.getElementById('close-track-modal-btn').addEventListener('click', () => {
         document.getElementById('track-modal').classList.add('hidden');

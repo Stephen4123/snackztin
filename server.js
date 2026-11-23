@@ -98,7 +98,13 @@ function verifyPassword(password, hash) {
 
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role || 'admin', name: user.display_name },
+    { 
+      id: user.id, 
+      email: user.email, 
+      phone: user.phone || '',
+      role: user.role || 'customer', 
+      name: user.name || user.display_name || 'Customer' 
+    },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -114,18 +120,32 @@ function getAuthCookieOptions(req) {
   };
 }
 
-function requireAdminAuth(req, res, next) {
+function getUserFromRequest(req) {
   const token = req.cookies[COOKIE_NAME] || (req.headers.authorization && req.headers.authorization.replace('Bearer ', ''));
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized: Admin login required' });
-  }
+  if (!token) return null;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Session expired or invalid. Please log in again.' });
+    return jwt.verify(token, JWT_SECRET);
+  } catch (_) {
+    return null;
   }
+}
+
+function requireAuth(req, res, next) {
+  const user = getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication required. Please sign in.' });
+  }
+  req.user = user;
+  next();
+}
+
+function requireAdminAuth(req, res, next) {
+  const user = getUserFromRequest(req);
+  if (!user || user.role !== 'admin') {
+    return res.status(401).json({ error: 'Unauthorized: Admin privileges required.' });
+  }
+  req.user = user;
+  next();
 }
 
 // ----------------------------------------------------
@@ -235,51 +255,265 @@ app.put('/api/settings', requireAdminAuth, async (req, res) => {
 // ----------------------------------------------------
 // REST APIS: 2. AUTHENTICATION (DATABASE DRIVEN)
 // ----------------------------------------------------
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    const { name, phone, email, password, address, city, state, pincode } = req.body;
+    if (!name || !phone || !password) {
+      return res.status(400).json({ error: 'Name, phone number, and password are required.' });
     }
 
-    const result = await pool.query('SELECT * FROM choco_users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+    const cleanName = (name || '').trim();
+    const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (cleanPhone.length < 10) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    // Check if phone or email is already registered
+    const existing = await pool.query(
+      `SELECT id, email, phone FROM choco_users 
+       WHERE (phone = $1 OR (LENGTH($1) >= 10 AND phone LIKE $2))
+          OR (email IS NOT NULL AND email <> '' AND LOWER(email) = $3)
+       LIMIT 1`,
+      [cleanPhone, `%${cleanPhone.slice(-10)}%`, cleanEmail || '']
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'An account with this mobile number or email already exists. Please sign in.' });
+    }
+
+    const userId = 'usr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const pwdHash = hashPassword(password);
+
+    const insertResult = await pool.query(
+      `INSERT INTO choco_users (
+        id, name, display_name, phone, email, password_hash, role,
+        address, city, state, pincode, created_at, updated_at
+      ) VALUES ($1, $2, $2, $3, $4, $5, 'customer', $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id, name, display_name, phone, email, role, address, city, state, pincode, created_at`,
+      [
+        userId, cleanName, cleanPhone, cleanEmail || null, pwdHash,
+        (address || '').trim(), (city || '').trim(), (state || '').trim(), (pincode || '').trim()
+      ]
+    );
+
+    const user = insertResult.rows[0];
+    const token = generateToken(user);
+    res.cookie(COOKIE_NAME, token, getAuthCookieOptions(req));
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        uid: user.id,
+        name: user.name,
+        displayName: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        address: user.address,
+        city: user.city,
+        state: user.state,
+        pincode: user.pincode
+      }
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, phoneOrEmail, password } = req.body;
+    const identifier = (email || phoneOrEmail || '').trim();
+
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Email or mobile number and password are required.' });
+    }
+
+    const cleanInput = identifier.toLowerCase();
+    const cleanPhone = identifier.replace(/[^0-9]/g, '');
+
+    const result = await pool.query(
+      `SELECT * FROM choco_users 
+       WHERE (email IS NOT NULL AND LOWER(email) = $1)
+          OR (phone IS NOT NULL AND phone = $2)
+          OR (LENGTH($2) >= 10 AND phone LIKE $3)
+       LIMIT 1`,
+      [cleanInput, cleanPhone, `%${cleanPhone.slice(-10)}%`]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid mobile/email or password.' });
     }
 
     const user = result.rows[0];
     const valid = verifyPassword(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid mobile/email or password.' });
     }
 
     const token = generateToken(user);
     res.cookie(COOKIE_NAME, token, getAuthCookieOptions(req));
+
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, role: user.role, name: user.display_name }
+      user: {
+        id: user.id,
+        uid: user.id,
+        name: user.name || user.display_name,
+        displayName: user.name || user.display_name,
+        email: user.email,
+        phone: user.phone || '',
+        role: user.role || 'customer',
+        address: user.address || '',
+        city: user.city || '',
+        state: user.state || '',
+        pincode: user.pincode || ''
+      }
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/me', async (req, res) => {
+  const userPayload = getUserFromRequest(req);
+  if (!userPayload) return res.status(401).json({ authenticated: false, user: null });
+
+  try {
+    const dbUser = await pool.query(
+      'SELECT id, name, display_name, phone, email, role, address, city, state, pincode FROM choco_users WHERE id = $1',
+      [userPayload.id]
+    );
+
+    if (dbUser.rows.length === 0) {
+      return res.status(401).json({ authenticated: false, user: null });
+    }
+
+    const u = dbUser.rows[0];
+    res.json({
+      authenticated: true,
+      user: {
+        id: u.id,
+        uid: u.id,
+        name: u.name || u.display_name,
+        displayName: u.name || u.display_name,
+        email: u.email,
+        phone: u.phone,
+        role: u.role,
+        address: u.address,
+        city: u.city,
+        state: u.state,
+        pincode: u.pincode
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/auth/me', (req, res) => {
-  const token = req.cookies[COOKIE_NAME] || (req.headers.authorization && req.headers.authorization.replace('Bearer ', ''));
-  if (!token) return res.status(401).json({ user: null });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ user: decoded });
-  } catch (_) {
-    res.status(401).json({ user: null });
-  }
-});
-
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie(COOKIE_NAME, getAuthCookieOptions(req));
   res.json({ success: true, message: 'Logged out successfully' });
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email, phoneOrEmail } = req.body;
+    const identifier = (email || phoneOrEmail || '').trim();
+    if (!identifier) return res.status(400).json({ error: 'Email or mobile number is required.' });
+
+    const cleanInput = identifier.toLowerCase();
+    const cleanPhone = identifier.replace(/[^0-9]/g, '');
+
+    const result = await pool.query(
+      `SELECT id, name, email, phone FROM choco_users 
+       WHERE (email IS NOT NULL AND LOWER(email) = $1)
+          OR (phone IS NOT NULL AND phone = $2)
+          OR (LENGTH($2) >= 10 AND phone LIKE $3)
+       LIMIT 1`,
+      [cleanInput, cleanPhone, `%${cleanPhone.slice(-10)}%`]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No account found matching this mobile number or email.' });
+    }
+
+    const user = result.rows[0];
+    const resetToken = crypto.randomBytes(16).toString('hex');
+    await pool.query(
+      `UPDATE choco_users SET
+         reset_token = $1,
+         reset_token_expiry = CURRENT_TIMESTAMP + INTERVAL '1 hour',
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [resetToken, user.id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Reset code generated successfully.',
+      resetToken
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, phoneOrEmail, resetToken, newPassword } = req.body;
+    const identifier = (email || phoneOrEmail || '').trim();
+
+    if (!identifier || !newPassword) {
+      return res.status(400).json({ error: 'Identifier and new password are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const cleanInput = identifier.toLowerCase();
+    const cleanPhone = identifier.replace(/[^0-9]/g, '');
+
+    const userResult = await pool.query(
+      `SELECT id FROM choco_users 
+       WHERE ((email IS NOT NULL AND LOWER(email) = $1)
+          OR (phone IS NOT NULL AND phone = $2)
+          OR (LENGTH($2) >= 10 AND phone LIKE $3))
+       LIMIT 1`,
+      [cleanInput, cleanPhone, `%${cleanPhone.slice(-10)}%`]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found.' });
+    }
+
+    const userId = userResult.rows[0].id;
+    const pwdHash = hashPassword(newPassword);
+
+    await pool.query(
+      `UPDATE choco_users SET
+         password_hash = $1,
+         reset_token = NULL,
+         reset_token_expiry = NULL,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [pwdHash, userId]
+    );
+
+    res.json({ success: true, message: 'Password has been updated successfully. You can now sign in.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ----------------------------------------------------
@@ -476,7 +710,7 @@ app.patch('/api/products/:id/stock', requireAdminAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
-// REST APIS: 5. ORDERS & CHECKOUT (WITH WHATSAPP DISPATCH)
+// REST APIS: 5. ORDERS & CHECKOUT (WITH USER ACCOUNT & WHATSAPP DISPATCH)
 // ----------------------------------------------------
 app.post('/api/orders', async (req, res) => {
   try {
@@ -489,18 +723,47 @@ app.post('/api/orders', async (req, res) => {
       return res.status(400).json({ error: 'Cart cannot be empty' });
     }
 
+    const authUser = getUserFromRequest(req);
+    let finalUserUid = authUser ? authUser.id : (req.body.userUid || null);
+
+    // If customer is signed in or phone matches, link order and update saved address
+    if (finalUserUid && (customer.address || customer.city || customer.pincode)) {
+      try {
+        await pool.query(
+          `UPDATE choco_users SET
+             address = COALESCE(NULLIF($1, ''), address),
+             city = COALESCE(NULLIF($2, ''), city),
+             state = COALESCE(NULLIF($3, ''), state),
+             pincode = COALESCE(NULLIF($4, ''), pincode),
+             updated_at = CURRENT_TIMESTAMP
+           WHERE id = $5`,
+          [customer.address, customer.city, customer.state, customer.pincode, finalUserUid]
+        );
+      } catch (_) {}
+    } else if (!finalUserUid && customer.phone) {
+      try {
+        const cleanP = customer.phone.replace(/[^0-9]/g, '');
+        if (cleanP.length >= 10) {
+          const match = await pool.query('SELECT id FROM choco_users WHERE phone LIKE $1 LIMIT 1', [`%${cleanP.slice(-10)}%`]);
+          if (match.rows.length > 0) {
+            finalUserUid = match.rows[0].id;
+          }
+        }
+      } catch (_) {}
+    }
+
     const orderId = 'ord_' + Date.now();
     const orderNumber = 'CHOC-' + Math.floor(100000 + Math.random() * 900000);
 
-    // Insert Order
+    // Insert Order with user_uid
     const insertQuery = `
       INSERT INTO choco_orders (
         id, order_number, customer, items, subtotal, discount,
         delivery_charge, total_amount, coupon_code, gift_message,
-        payment_method, payment_status, order_status
+        payment_method, payment_status, order_status, user_uid
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        'WhatsApp Order', 'Pending', 'Pending'
+        'WhatsApp Order', 'Pending', 'Pending', $11
       ) RETURNING *
     `;
 
@@ -508,7 +771,7 @@ app.post('/api/orders', async (req, res) => {
       orderId, orderNumber,
       JSON.stringify(customer), JSON.stringify(items),
       subtotal || 0, discount || 0, deliveryCharge || 0, totalAmount,
-      couponCode || '', giftMessage || ''
+      couponCode || '', giftMessage || '', finalUserUid
     ]);
 
     const createdOrder = result.rows[0];
@@ -547,11 +810,26 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/orders', requireAdminAuth, async (req, res) => {
+app.get('/api/orders', requireAuth, async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, my } = req.query;
     let query = 'SELECT * FROM choco_orders WHERE 1=1';
     const params = [];
+
+    // Role-based scoping:
+    // Administrators can view all orders; customers can ONLY view their own orders!
+    if (req.user.role !== 'admin' || my === 'true') {
+      params.push(req.user.id);
+      let userClause = `user_uid = $${params.length}`;
+      if (req.user.phone) {
+        const cleanP = req.user.phone.replace(/[^0-9]/g, '');
+        if (cleanP.length >= 6) {
+          params.push(`%${cleanP.slice(-10)}%`);
+          userClause = `(${userClause} OR customer->>'phone' LIKE $${params.length})`;
+        }
+      }
+      query += ` AND ${userClause}`;
+    }
 
     if (status && status !== 'All') {
       params.push(status);
